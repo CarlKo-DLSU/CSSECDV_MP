@@ -8,7 +8,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 async function connectDB() {
-    await mongoose.connect(process.env.MONGO_URL);
+    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/CSSECDV_MP';
+    await mongoose.connect(uri);
 }
 
 // Load JSON files
