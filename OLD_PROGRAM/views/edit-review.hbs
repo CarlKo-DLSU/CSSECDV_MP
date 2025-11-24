@@ -1,0 +1,55 @@
+<div class="ed-main">
+    <div id="delete-popup" class="popup">
+        <div id="delete-content">
+            <h2>Delete Post?</h2>
+            <div>
+                <span id="delete-no" class="edit-user ed-cancel hov1">
+                    <p class="ed-cancel-text">NO</p>
+                </span>
+                <form id="delete-yes" class="edit-user ed-cancel hov1" method="post" action="/edit/delete">
+                    <p id="delete-yes-text" class="ed-cancel-text">YES</p>
+                    <input type="hidden" name="id" value="{{ _id }}">
+                </form>
+            </div>
+        </div>
+        <div id="delete-bg"></div>
+    </div>
+    <form enctype="multipart/form-data" id="edit-form" class="ed-midbar" method="POST" data-id="{{ _id }}">
+        <div class="ed-midbar-bg">
+            <div id="edit-top">
+                <h1 id="edit-review-text">Edit Review</h1>
+                <span id="edit-delete" class="edit-user ed-cancel hov1">
+                    <p class="ed-cancel-text">DELETE</p>
+                </span>
+            </div>
+            <h2 class="sb-title">
+                <input name="title" id="edit-title" value="{{ title }}" placeholder="Enter title...">
+            </h2>
+            <textarea name="content" id="edit-content" placeholder="Enter content...">{{ body }}</textarea>
+            <div id="ed-bottom">
+                <div class="cr-rev-actions">
+                    <ul id="g-ul-clickable" class="cr-star-group hov3" data-stars="{{ stars }}"> </ul>
+                    <input type="hidden" id="cr-star-input" name="stars" value="{{ stars }}">
+                    <label id="cr-file-label" for="cr-file" class="hov1">
+                        <span class="icon icon-md cr-img-i"></span><span data-oldImages="{{ oldImages }}"
+                            id="cr-upload-text">0 IMGS</span>
+                    </label>
+                    <input class="input-hidden" id="cr-file" type="file" name="images" accept="image/*" data-changed="false" multiple>
+                </div>
+                <div class="ed-rev-div">
+                    <a id="edit-cancel" class="edit-user ed-cancel hov1" href="/resto/id/{{ restoId.name }}">
+                        <p class="ed-cancel-text">DONE</p>
+                    </a>
+                    <label for="edit-submit" id="edit-save" class="edit-user ed-save hov1">
+                        <p class="ed-save-text">SAVE</p>
+                        <input id="edit-submit" class="input-hidden" type="submit">
+                    </label>
+                </div>
+            </div>
+            <p id="edit-msg"></p>
+        </div>
+    </form>
+</div>
+
+<script src="/js/editreview.js"></script>
+<script src="/js/rating.js"></script>

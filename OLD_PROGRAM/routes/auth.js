@@ -6,58 +6,24 @@ const bcrypt = require("bcrypt")
 const passport = require('passport');
 const checkAuthenticate = require('../utility/checkauthenticate');
 
-router.post('/register', async (req, res, next) => {
+router.post('/register', async (req, res) => {
     try {
         const { username, password, confirm_password } = req.body
-
-        // server-side validation (must mirror client rules)
-        if (!username || !password || !confirm_password) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Missing required fields.')}`)
-        }
-
-        if (password !== confirm_password) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Passwords do not match.')}`)
-        }
-
-        const lengthOk = password.length >= 8
-        const numberOk = /[0-9]/.test(password)
-        const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(password)
-
-        if (!lengthOk || !numberOk || !specialOk) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Password must be at least 8 characters and include a number and a special character.')}`)
-        }
-
-        // check username availability server-side too
-        const existing = await query.getProfile({ name: username })
-        if (existing) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Username already taken.')}`)
-        }
-
         const hashedPassword = await bcrypt.hash(password, 10)
+
+        // do error checking
+        // ...
 
         await query.insertProfle({
             name: username,
             password: hashedPassword
         })
 
-        // fetch the newly created user and log them in
-        const user = await query.getProfile({ name: username })
-        if (!user) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Failed to retrieve user after registration.')}`)
-        }
-
-        req.login(user, (err) => {
-            if (err) {
-                return next(err)
-            }
-            // optional: honor rememberMe if provided on registration form
-            if (req.body.rememberMe) {
-                req.session.cookie.maxAge = 1814400000
-            }
-            return res.redirect('/')
-        })
+        console.log(`REGISTER SUCCESSFUL!\nU: ${username}\nP: ${password}`)
+        res.redirect("/")
     } catch (err) {
-        res.redirect(`/error?errorMsg=${encodeURIComponent(err.message)}`)
+        // ...
+        res.redirect(`/error?errorMsg=${err.message}`)
     }
 })
 

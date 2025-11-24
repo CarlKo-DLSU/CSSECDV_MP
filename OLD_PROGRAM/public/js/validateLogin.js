@@ -15,12 +15,7 @@ const logRememberMe = document.getElementById('lor-remember-me')
 const normalIcon = "-40px -80px";
 const errorIcon = "-60px -80px";
 
-// attach only when form exists (prevents silent failure if script runs before DOM or id differs)
-if (regForm) {
-    regForm.addEventListener('submit', regValidateContent)
-} else {
-    console.warn('Register form (lor-register-form) not found - client validation may be bypassed')
-}
+regForm.addEventListener('submit', regValidateContent)
 logForm.addEventListener('submit', logValidateContent)
 
 regUsername.addEventListener("keyup", () => {
@@ -44,8 +39,8 @@ regUsername.addEventListener("keyup", () => {
     resetReg()
 })
 
-regPassword.addEventListener("keyup", () => { resetReg(); validateRegPassword(); })
-regConPassword.addEventListener("keyup", () => { resetReg(); validateRegPassword(); })
+regPassword.addEventListener("keyup", resetReg)
+regConPassword.addEventListener("keyup", resetReg)
 logUsername.addEventListener("keyup", resetLog)
 logPassword.addEventListener("keyup", resetLog)
 
@@ -61,29 +56,21 @@ function resetLog() {
 }
 
 function regValidateContent(e) {
-    // ensure we check password rules first so message is set
-    const pwdOk = validateRegPassword()
-    const usernamesEmpty = regUsername.value.trim() == ""
-    const passwordsEmpty = regPassword.value.trim() == ""
-    const notMatch = regPassword.value.trim() !== regConPassword.value.trim()
-    const nameTaken = regAlr && regAlr.innerHTML !== ""
-  
-    if (usernamesEmpty || passwordsEmpty || notMatch || nameTaken || !pwdOk) {
-        // disable button / stop submission
+    if (regUsername.value == ""
+        || regPassword.value == ""
+        || regPassword.value !== regConPassword.value
+        || regAlr.innerHTML !== "") {
+        // disable button
         e.preventDefault()
-        e.stopImmediatePropagation()
         regUsername.classList.add("required-error")
         regPassword.classList.add("required-error")
         regConPassword.classList.add("required-error")
-  
-        if (notMatch) {
+
+        if (regPassword.value !== regConPassword.value) {
             regCon.innerHTML = "❌ Passwords do not match."
-        } else if (!pwdOk) {
-            // validateRegPassword already sets a message
         } else {
             regCon.innerHTML = ""
         }
-        return false
     }
 }
 
@@ -104,7 +91,7 @@ function logValidateContent(e) {
             logAlr.innerHTML = ""
             logForm.submit()
         } else {
-            logAlr.innerHTML = "❌ Invalid Credential/s."
+            logAlr.innerHTML = "❌ Invalid Credentials."
             logUsername.classList.add("required-error")
             logPassword.classList.add("required-error")
         }
@@ -118,28 +105,4 @@ function logValidateContent(e) {
         "rememberMe": logRememberMe.checked
     }))
 
-}
-
-function validateRegPassword() {
-    const pwd = (regPassword.value || "").trim()
-    const conf = (regConPassword.value || "").trim()
-    const lengthOk = pwd.length >= 8
-    const numberOk = /[0-9]/.test(pwd)
-    const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(pwd)
-
-    if (!lengthOk || !numberOk || !specialOk) {
-        regCon.innerHTML = "❌ Password must be at least 8 characters and include a number and a special character."
-        regPassword.classList.add("required-error")
-        return false
-    }
-
-    // if passwords do not match, show that instead
-    if (conf !== "" && pwd !== conf) {
-        regCon.innerHTML = "❌ Passwords do not match."
-        return false
-    }
-
-    regCon.innerHTML = ""
-    regPassword.classList.remove("required-error")
-    return true
 }

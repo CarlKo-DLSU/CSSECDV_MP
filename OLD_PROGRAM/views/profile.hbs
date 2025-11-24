@@ -1,0 +1,35 @@
+<div class="pro-main">
+    <div class="pro-sidebar">
+        <div class="pro-sidebar-bg">
+            <h2 class="sb-name">{{ sb.name }}</h2>
+            <div class="sb-pic hov1">
+                <img src="/imgs/avatars/{{ sb.avatar }}" alt="">
+            </div>
+            <p class="sb-description">{{ sb.description }}</p>
+            <div class="sb-stats">
+                <p class="reviews"><span class="orange-bold">{{ sb.reviewCount }}</span> reviews</p>
+                <p class="erms"><span class="orange-bold">{{ sb.erms }}</span> erms</p>
+            </div>
+            {{#if isCurrentUser}}
+            <div class="edit-div">
+                <a class="edit-user hov1" href="/edit/user">
+                    <span class="icon icon-md edit-i"></span>
+                    <p class="edit-user-text">EDIT USER</p>
+                </a>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+    <div class="pro-review-holder">
+        <div id="sortfilter">
+            {{> sortfilter}}
+        </div>
+        {{# if empty}}
+        <div id="empty-reviews-msg">No reviews found (ￗ﹏ￗ )</div>
+        {{/if}}
+        {{> review reviews}}
+    </div>
+</div>
+
+<script src="/js/rating.js"></script>
+<script src="/js/sfReviews.js"></script>

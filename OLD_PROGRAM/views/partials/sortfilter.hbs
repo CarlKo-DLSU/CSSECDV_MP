@@ -1,0 +1,39 @@
+<form id="sf-form">
+    {{#unless home}}
+    <label class="icon sort-noor-i icon-md" id="sf-or-label">
+        <input id="sf-or" type="checkbox" class="input-hidden" name="or" value="noor">
+    </label>
+    {{/unless}}
+    <label class="icon sort-desc-i icon-md" id="sf-order-label">
+        <input id="sf-order" type="checkbox" class="input-hidden" name="order" value="asc">
+    </label>
+    <label class="sf-label" id="sf-sort-list"> Sort:
+        <select id="sf-sort" name="sort">
+            {{#if home}}
+            <option value="relevance">Relevance</option>
+            <option value="reviews">Reviews</option>
+            {{else}}
+            <option value="date">Date</option>
+            <option value="relevance">Relevance</option>
+            <option value="likes">Likes</option>
+            {{/if}}
+        </select>
+    </label>
+    <label class="sf-label" id="sf-filter-list">Stars:
+        <div class="sf-list">
+            <label for="sf-min" class="sf-abs-label">Min</label>
+            <input id="sf-min" type="number" min="0" max="5" name="min" value="0">
+        </div>
+        <div class="sf-list">
+            <label for="sf-max" class="sf-abs-label">Max</label>
+            <input id="sf-max" type="number" min="0" max="5" name="max" value="5">
+        </div>
+    </label>
+    {{#unless home}}
+    <label class="sf-label" id="sf-page-list">Page:
+        <div class="sf-list">
+            <input id="sf-page" type="number" min="1" name="page" value="1">
+        </div>
+    </label>
+    {{/unless}}
+</form>

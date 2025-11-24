@@ -1,0 +1,82 @@
+<!-- create review popup -->
+<div id="cr-container" class="popup">
+    <form id="cr-form" class="cr-popup" method="post" enctype="multipart/form-data" action="/review/new/{{ sb.name }}">
+        <div class="cr-header">
+            <h1 class="cr-label">Create Review</h1>
+            <span id="cr-popup-close" class="icon icon-md popup-x-i cr-x-i hov2">
+        </div>
+        <input type="text" name="rv-title" id="cr-title" class="required-field" placeholder="Title...">
+        <textarea name="rv-body" id="cr-content" class="required-field"
+            placeholder="What I think about this restaurant..."></textarea>
+        <div class="cr-actions">
+            <ul id="g-ul-clickable" class="cr-star-group hov3" data-stars="5"> </ul>
+            <input type="hidden" id="cr-star-input" name="rv-stars" value="5">
+            <input id="cr-file" type="file" name="rv-images" accept="image/*" multiple>
+            <label id="cr-file-label" for="cr-file" class="hov1">
+                <span class="icon icon-md cr-img-i"></span><span id="cr-upload-text">0 IMGS</span>
+            </label>
+            <div class="cr-button-group">
+                <button id="cr-cancel" type="button" class="popup-button cr-cancel hov1">CANCEL</button>
+                <button id="cr-post" type="submit" class="popup-button cr-post hov1">POST</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- creater or popup -->
+<div id="or-container" class="popup">
+    <form id="or-form" class="cr-popup cr-popup-reply" method="post" action="/review/reply">
+        <input id="or-revId" type="hidden" name="reviewId" value="">
+        <div class="cr-header">
+            <h1 class="cr-reply">Reply to User</h1>
+            <span id="or-popup-close" class="icon icon-md popup-x-i cr-x-i hov2">
+        </div>
+        <textarea name="body" id="or-content" class="required-field"
+            placeholder="Enter reply..."></textarea>
+        <div class="cr-actions">
+            <div class="cr-button-group">
+                <button id="or-cancel" type="button" class="popup-button cr-cancel hov1">CANCEL</button>
+                <button id="or-post" type="submit" class="popup-button cr-post hov1">POST</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- reviews -->
+<div class="pro-main">
+    <div class="pro-sidebar">
+        <div class="pro-sidebar-bg">
+            <h2 class="sb-name">{{ sb.name }}</h2>
+            <ul class="cr-star-group" data-stars="{{ sb.stars }}">
+            </ul>
+            <div class="sb-pic sb-resto hov1">
+                <img src="/imgs/posters/{{ sb.poster }}" alt="">
+            </div>
+            <p class="sb-description">{{ sb.description }}</p>
+            <div class="sb-stats">
+                <p class="reviews"><span class="orange-bold">{{ sb.reviewCount }}</span> reviews</p>
+                <p class="stars"><span class="orange-bold">{{ sb.stars }}</span> stars</p>
+            </div>
+            <div id="cr-popup-open" class="edit-div">
+                <div class="edit-user create-review hov1">
+                    <span class="icon plus-i"></span>
+                    <p class="edit-user-text">CREATE REVIEW</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="pro-review-holder">
+    <div id="sortfilter">
+        {{> sortfilter}}
+    </div>
+    {{# if empty}}
+    <div id="empty-reviews-msg">No reviews found (ￗ﹏ￗ )</div>
+    {{/if}}
+    {{> review reviews}}
+</div>
+
+<script src="/js/validateReview.js"></script>
+<script src="/js/rating.js"></script>
+<script src="/js/sfReviews.js"></script>
