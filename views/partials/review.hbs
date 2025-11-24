@@ -1,0 +1,77 @@
+<ul id="pro-review-ul">
+    {{#each this}}
+    <li class="pro-review-li">
+        <div class="pro-review-box">
+            <div class="pro-actions">
+                <ul class="cr-star-group" data-stars="{{ stars }}"></ul>
+                <div class="pro-actions-like">
+                    <form class="vote-form" data-review="{{ _id }}" data-state="{{ state }}">
+                        <label class="icon icon-lg pro-like">
+                            <input class="input-hidden" type="radio" name="vote" value="like">
+                        </label>
+
+                        <span class="pro-like-count">{{ likeCount }}</span>
+
+                        <label class="icon icon-lg pro-dislike">
+                            <input class="input-hidden" type="radio" name="vote" value="dislike">
+                        </label>
+
+                    </form>
+                </div>
+            </div>
+            <a href="/profile/id/{{ profileId.name }}"><img class="pro-review-icon"
+                    src="/imgs/avatars/{{ profileId.avatar }}">
+                </img></a>
+            <div class="pro-review-header"">
+                <div>
+                    <p class=" pro-review-location"><a href="/profile/id/{{ profileId.name }}"
+                    class="pro-user-link thov1">{{
+                    profileId.name }}</a> on <a href="/resto/id/{{ restoId.name }}"
+                    class="pro-location-link bitalics thov1">{{ restoId.name }}</a> • <span class="pro-user-date"
+                    data-date="{{ lastUpdated }}"></span>{{#if edited}}<span class="pro-user-edited">
+                    &ltedited&gt<span>{{/if}}</p>
+                        <div class="pro-review-title-div">
+                            <h3 class="pro-review-title bold">{{ title }}</h3>
+                            {{#if edit}}
+                            <a href="/edit/review/{{ _id }}" class="pro-post-edit hov3">edit</a>
+                            {{/if}}
+                        </div>
+            </div>
+        </div>
+        <div class="pro-review-text">{{ body }}</div>
+        <div class="pro-review-images">
+            {{#each uploads}} <img src="/imgs/uploads/{{ this }}"> {{/each}}
+        </div>
+        </div>
+        {{#if hasOr}}
+        <div class="pro-or-box">
+            <div class="pro-or-header">
+                <span class="icon pro-crown-i"></span>
+                <span class="bold">Owner Response • <span class="pro-or-date"
+                        data-date="{{ ownersResponse.lastUpdated }}"></span></span>
+                {{#if isOwner}}
+                <form action="/edit/delete/or" method="post">
+                    <label for="delete-submit" class="pro-post-edit or-reply-delete hov3">delete</label>
+                    <input type="hidden" name="id" value="{{ _id }}">
+                    <input id="delete-submit" class='input-hidden' type="submit">
+                </form>
+                {{/if}}
+            </div>
+            <div class="pro-or-text">{{ ownersResponse.body }}</div>
+        </div>
+        {{else}}
+        {{#if isOwner}}
+        <div class="or-popup-open pro-or-auth-box" data-id="{{ _id }}">
+            <div class="pro-or-auth-header">
+                <span class="icon icon-md pro-author-i"></span>
+                <span class="bold thov-auth">Reply</span>
+            </div>
+        </div>
+        {{/if}}
+        {{/if}}
+    </li>
+    {{/each}}
+</ul>
+
+<script src="/js/likes.js"></script>
+<script src="/js/expand.js"></script>
