@@ -31,6 +31,11 @@ const profileSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    // comment out if demo-ing disallowing previous passwords
+    lastPasswordChange: {
+        type: Date,
+        default: null
+    },
     failedLoginAttempts: {
         type: Number,
         default: 0

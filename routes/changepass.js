@@ -56,6 +56,19 @@ router.post('/', checkAuthenticate, async (req, res) => {
             return res.status(500).render('changepass', { currentUser: req.user, error: 'User record not found.', success: null })
         }
 
+        // comment out if demo-ing disallowing previous passwords
+        if (user.lastPasswordChange) {
+            const elapsed = Date.now() - new Date(user.lastPasswordChange).getTime()
+            const DAY_MS = 24 * 60 * 60 * 1000
+            if (elapsed < DAY_MS) {
+                const remainingMs = DAY_MS - elapsed
+                const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000))
+                const msg = `You must wait 24 hours before changing your password again. Try again in ~${remainingHours} hour(s).`
+                if (isAjax(req)) return res.status(429).send(msg)
+                return res.status(429).render('changepass', { currentUser: req.user, error: msg, success: null })
+            }
+        }
+
         const match = await bcrypt.compare(current_password, user.password)
         if (!match) {
             if (isAjax(req)) return res.status(400).send('Current password is incorrect.')
@@ -91,7 +104,9 @@ router.post('/', checkAuthenticate, async (req, res) => {
                             // push previous hash to front; no $slice so history is unlimited
                             previousPasswords: { $each: [user.password], $position: 0 }
                         },
-                        $set: { password: hashed }
+                        // comment out if demo-ing disallowing previous passwords
+                        // $set: { password: hashed }
+                        $set: { password: hashed, lastPasswordChange: new Date() }
                     },
                     { new: true }
                 )
@@ -100,7 +115,9 @@ router.post('/', checkAuthenticate, async (req, res) => {
             if (!updateResult && query && typeof query.updateProfile === 'function') {
                 // push old hash and set new hash (two operations if helper doesn't support $push/$slice)
                 await query.updateProfile({ _id: req.user._id }, { $push: { previousPasswords: { $each: [user.password], $position: 0 } } })
-                await query.updateProfile({ _id: req.user._id }, { $set: { password: hashed } })
+                // comment out if demo-ing disallowing previous passwords
+                // await query.updateProfile({ _id: req.user._id }, { $set: { password: hashed } })
+                await query.updateProfile({ _id: req.user._id }, { $set: { password: hashed, lastPasswordChange: new Date() } })
                 updateResult = true
             }
         } catch (e) {
