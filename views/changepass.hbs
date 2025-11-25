@@ -1,0 +1,30 @@
+ <div class="cp-main">
+    <div class="cp-box">
+        <h2>Change Password</h2>
+
+        {{#if error}}
+        <p class="err-msg">❌ {{ error }}</p>
+        {{/if}}
+
+        {{#if success}}
+        <p class="success-msg">✅ {{ success }}</p>
+        {{/if}}
+
+        <form id="changepass-form" method="POST" action="/changepass">
+            <label>Current Password
+                <input type="password" name="current_password" placeholder="Current password" required>
+            </label>
+            <br/>
+            <label>New Password
+                <input type="password" name="new_password" placeholder="New password" required>
+            </label>
+            <br/>
+            <label>Confirm New Password
+                <input type="password" name="confirm_password" placeholder="Confirm new password" required>
+            </label>
+            <br/>
+            <input type="submit" value="Change Password" class="popup-button hov1">
+            <a href="/profile/id/{{ currentUser.name }}" class="popup-button hov1" style="margin-left:8px;">Cancel</a>
+        </form>
+    </div>
+</div>

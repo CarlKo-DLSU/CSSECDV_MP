@@ -52,6 +52,7 @@ const restoRouter = require("./routes/resto")
 const reviewRouter = require("./routes/review")
 const authRouter = require("./routes/auth")
 const editRouter = require("./routes/edit")
+const changePassRouter = require("./routes/changepass")
 
 app.use("/", homeRouter)
 app.use("/profile", profileRouter)
@@ -59,6 +60,7 @@ app.use("/resto", restoRouter)
 app.use("/review", reviewRouter)
 app.use("/auth", authRouter)
 app.use("/edit", editRouter)
+app.use("/changepass", changePassRouter)
 
 
 // listen! :3
