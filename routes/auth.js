@@ -6,69 +6,76 @@ const bcrypt = require("bcrypt")
 const passport = require('passport');
 const checkAuthenticate = require('../utility/checkauthenticate');
 const Profile = require('../database/models/Profile');
+const LoginAttempt = require('../database/models/LoginAttempt');
 
+const LOCK_THRESHOLD = 5
+const LOCK_MS = 5 * 60 * 1000 // 5 minutes
+
+async function recordFailedAttempt(username) {
+    const la = await LoginAttempt.findOneAndUpdate(
+        { username },
+        { $inc: { attempts: 1 } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+    )
+    if (la.attempts >= LOCK_THRESHOLD && (!la.lockUntil || la.lockUntil < Date.now())) {
+        la.lockUntil = new Date(Date.now() + LOCK_MS)
+        await la.save()
+        return { locked: true, la }
+    }
+    return { locked: false, la }
+}
+
+async function clearAttempts(username) {
+    await LoginAttempt.deleteOne({ username })
+}
+
+// register route unchanged (kept as before)
 router.post('/register', async (req, res, next) => {
     try {
         const { username, password, confirm_password } = req.body
-
-        // helper to detect XHR/JS client
         const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
-
-        // server-side validation (must mirror client rules)
         if (!username || !password || !confirm_password) {
             const msg = 'Missing required fields.'
             if (isAjax) return res.status(400).send(msg)
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
-
         if (password !== confirm_password) {
             const msg = 'Passwords do not match.'
             if (isAjax) return res.status(400).send(msg)
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
-
         const lengthOk = password.length >= 8
         const numberOk = /[0-9]/.test(password)
         const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(password)
-
         if (!lengthOk || !numberOk || !specialOk) {
             const msg = 'Password must be at least 8 characters and include a number and a special character.'
             if (isAjax) return res.status(400).send(msg)
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
-
-        // check username availability server-side too
         const existing = await query.getProfile({ name: username })
         if (existing) {
             const msg = 'Username already taken.'
             if (isAjax) return res.status(409).send(msg)
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
-
         const hashedPassword = await bcrypt.hash(password, 10)
-
         await query.insertProfle({
             name: username,
             password: hashedPassword
         })
-
-        // fetch the newly created user and log them in
         const user = await query.getProfile({ name: username })
         if (!user) {
             const msg = 'Failed to retrieve user after registration.'
             if (isAjax) return res.status(500).send(msg)
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
-
         req.login(user, (err) => {
             if (err) {
                 return next(err)
             }
-            // optional: honor rememberMe if provided on registration form
             if (req.body.rememberMe) {
                 req.session.cookie.maxAge = 1814400000
             }
-            // on XHR return success status, otherwise redirect as before
             if (isAjax) return res.status(200).send('Success')
             return res.redirect('/')
         })
@@ -80,42 +87,43 @@ router.post('/register', async (req, res, next) => {
     }
 })
 
+// login route: use passport with custom callback; record attempts by username regardless of existing Profile
 router.post('/login', async (req, res, next) => {
-    const { username } = req.body;
-
+    const username = req.body.username
     try {
-        const userRecord = await query.getProfile({ name: username });
-
-        // if account currently locked
-        if (userRecord && userRecord.lockUntil && userRecord.lockUntil > Date.now()) {
+        // If there is a username-level lock (from LoginAttempt), refuse early
+        const la = await LoginAttempt.findOne({ username })
+        if (la && la.lockUntil && la.lockUntil > Date.now()) {
             return res.redirect(`/error?errorMsg=${encodeURIComponent('Please try again in a few minutes.')}`);
         }
 
-        // use passport with a custom callback so we can update counters
         passport.authenticate('local', async (err, user, info) => {
             if (err) return next(err);
 
             if (!user) {
-                // failed login attempt
+                // failed login attempt -> record at username-level
+                const { locked } = await recordFailedAttempt(username)
+
+                // if an actual Profile exists, also increment its counters for monitoring
+                const userRecord = await query.getProfile({ name: username })
                 if (userRecord) {
                     const newAttempts = (userRecord.failedLoginAttempts || 0) + 1;
                     const update = { failedLoginAttempts: newAttempts };
-
-                    if (newAttempts >= 5) {
-                        update.lockUntil = new Date(Date.now() + 5 * 60 * 1000); // lock 5 minutes
+                    if (newAttempts >= LOCK_THRESHOLD) {
+                        update.lockUntil = new Date(Date.now() + LOCK_MS);
                     }
-
                     await Profile.findByIdAndUpdate(userRecord._id, update, { new: true });
+                }
 
-                    if (newAttempts >= 5) {
-                        return res.redirect(`/error?errorMsg=${encodeURIComponent('Please try again in a few minutes.')}`);
-                    }
+                if (locked) {
+                    return res.redirect(`/error?errorMsg=${encodeURIComponent('Please try again in a few minutes.')}`);
                 }
 
                 return res.redirect("/error?errorMsg=Failed to log in, please try again!");
             }
 
-            // successful login: reset counters
+            // successful login: clear username-level attempts and reset Profile counters
+            await clearAttempts(req.body.username);
             await Profile.findByIdAndUpdate(user._id, { failedLoginAttempts: 0, lockUntil: null });
 
             req.login(user, (loginErr) => {
@@ -131,39 +139,52 @@ router.post('/login', async (req, res, next) => {
     }
 })
 
+// validatecredentials route: check username-level lock even if user doesn't exist
 router.post('/validatecredentials', async (req, res) => {
     const username = req.body.username
     const password = req.body.password
     const user = await query.getProfile({ name: username })
 
-    if (!user) {
-        res.status(400).send("Bad Credentials")
-        return
+    // check username-level lock
+    const la = await LoginAttempt.findOne({ username })
+    if (la && la.lockUntil && la.lockUntil > Date.now()) {
+        const secondsLeft = Math.ceil((la.lockUntil - Date.now()) / 1000);
+        return res.status(423).send(`Account locked. Try again in ${secondsLeft} seconds.`);
     }
 
-    // if account currently locked
+    if (!user) {
+        // record failed attempt for unknown username
+        const { locked } = await recordFailedAttempt(username)
+        if (locked) {
+            return res.status(423).send("Too many failed attempts. Account locked for 5 minutes.");
+        }
+        // don't reveal whether user exists
+        return res.status(400).send("Bad Credentials")
+    }
+
+    // if account currently locked at profile level
     if (user.lockUntil && user.lockUntil > Date.now()) {
-        const secondsLeft = Math.ceil((user.lockUntil - Date.now()) / 1000);
-        return res.status(423).send(`Account locked. Try again in ${secondsLeft} seconds.`);
+        return res.status(400).send("Bad Credentials")
     }
 
     try {
         if (await bcrypt.compare(password, user.password)) {
-            // reset counters on success
+            // successful: clear username-level attempts and reset Profile counters
+            await clearAttempts(username);
             await Profile.findByIdAndUpdate(user._id, { failedLoginAttempts: 0, lockUntil: null });
             res.status(200).send("Success!")
         } else {
-            // increment failed attempts and set lock if threshold reached
+            // increment failed both at username-level and profile-level
+            const { locked } = await recordFailedAttempt(username)
+
             const newAttempts = (user.failedLoginAttempts || 0) + 1;
             const update = { failedLoginAttempts: newAttempts };
-
-            if (newAttempts >= 5) {
-                update.lockUntil = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+            if (newAttempts >= LOCK_THRESHOLD) {
+                update.lockUntil = new Date(Date.now() + LOCK_MS); // lock 5 minutes
             }
-
             await Profile.findByIdAndUpdate(user._id, update, { new: true });
 
-            if (newAttempts >= 5) {
+            if (locked) {
                 return res.status(423).send("Too many failed attempts. Account locked for 5 minutes.");
             }
 
