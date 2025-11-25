@@ -20,13 +20,22 @@ const profileSchema = new mongoose.Schema({
     },
     createdAt: {
         type: Date,
-        default: () => { Date.now() },
+        default: () => Date.now(),
         immutable: true
     },
     password: {
         type: String,
         required: true,
         immutable: true
+    },
+    // new lockout fields
+    failedLoginAttempts: {
+        type: Number,
+        default: 0
+    },
+    lockUntil: {
+        type: Date,
+        default: null
     }
 })
 

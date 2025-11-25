@@ -1,4 +1,3 @@
-// frontend validation
 const regForm = document.getElementById('lor-register-form')
 const regUsername = document.getElementById('lor-register-username')
 const regPassword = document.getElementById('lor-register-password')
@@ -21,67 +20,76 @@ if (regForm) {
 } else {
     console.warn('Register form (lor-register-form) not found - client validation may be bypassed')
 }
-logForm.addEventListener('submit', logValidateContent)
 
-regUsername.addEventListener("keyup", () => {
-    let xhttp = new XMLHttpRequest()
-    xhttp.open("POST", `/auth/nametaken`, true)
-    xhttp.setRequestHeader("Content-type", "application/json; charset=UTF-8")
+if (logForm) {
+    logForm.addEventListener('submit', logValidateContent)
+} else {
+    console.warn('Login form (lor-login-form) not found - client validation may be bypassed')
+}
 
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState != 4) {
-            return
+if (regUsername) {
+    regUsername.addEventListener("keyup", () => {
+        let xhttp = new XMLHttpRequest()
+        xhttp.open("POST", `/auth/nametaken`, true)
+        xhttp.setRequestHeader("Content-type", "application/json; charset=UTF-8")
+
+        xhttp.onreadystatechange = () => {
+            if (xhttp.readyState != 4) {
+                return
+            }
+
+            if (xhttp.status == 200) {
+                regAlr.textContent = ""
+            } else {
+                regAlr.textContent = "❌ Already Taken."
+            }
         }
 
-        if (xhttp.status == 200) {
-            regAlr.innerHTML = ""
-        } else {
-            regAlr.innerHTML = "❌ Already Taken."
-        }
-    }
+        xhttp.send(JSON.stringify({ "username": regUsername.value, }))
+        resetReg()
+    })
+}
 
-    xhttp.send(JSON.stringify({ "username": regUsername.value, }))
-    resetReg()
-})
-
-regPassword.addEventListener("keyup", () => { resetReg(); validateRegPassword(); })
-regConPassword.addEventListener("keyup", () => { resetReg(); validateRegPassword(); })
-logUsername.addEventListener("keyup", resetLog)
-logPassword.addEventListener("keyup", resetLog)
+if (regPassword) regPassword.addEventListener("keyup", () => { resetReg(); validateRegPassword(); })
+if (regConPassword) regConPassword.addEventListener("keyup", () => { resetReg(); validateRegPassword(); })
+if (logUsername) logUsername.addEventListener("keyup", resetLog)
+if (logPassword) logPassword.addEventListener("keyup", resetLog)
 
 function resetReg() {
-    regUsername.classList.remove("required-error")
-    regPassword.classList.remove("required-error")
-    regConPassword.classList.remove("required-error")
+    if (regUsername) regUsername.classList.remove("required-error")
+    if (regPassword) regPassword.classList.remove("required-error")
+    if (regConPassword) regConPassword.classList.remove("required-error")
+    if (regCon) regCon.textContent = ""
 }
 
 function resetLog() {
-    logUsername.classList.remove("required-error")
-    logPassword.classList.remove("required-error")
+    if (logUsername) logUsername.classList.remove("required-error")
+    if (logPassword) logPassword.classList.remove("required-error")
+    if (logAlr) logAlr.textContent = ""
 }
 
 function regValidateContent(e) {
     // ensure we check password rules first so message is set
     const pwdOk = validateRegPassword()
-    const usernamesEmpty = regUsername.value.trim() == ""
-    const passwordsEmpty = regPassword.value.trim() == ""
-    const notMatch = regPassword.value.trim() !== regConPassword.value.trim()
-    const nameTaken = regAlr && regAlr.innerHTML !== ""
+    const usernamesEmpty = !regUsername || regUsername.value.trim() == ""
+    const passwordsEmpty = !regPassword || regPassword.value.trim() == ""
+    const notMatch = regPassword && regConPassword && regPassword.value.trim() !== regConPassword.value.trim()
+    const nameTaken = regAlr && regAlr.textContent !== ""
   
     if (usernamesEmpty || passwordsEmpty || notMatch || nameTaken || !pwdOk) {
         // disable button / stop submission
         e.preventDefault()
         e.stopImmediatePropagation()
-        regUsername.classList.add("required-error")
-        regPassword.classList.add("required-error")
-        regConPassword.classList.add("required-error")
+        if (regUsername) regUsername.classList.add("required-error")
+        if (regPassword) regPassword.classList.add("required-error")
+        if (regConPassword) regConPassword.classList.add("required-error")
   
-        if (notMatch) {
-            regCon.innerHTML = "❌ Passwords do not match."
+        if (notMatch && regCon) {
+            regCon.textContent = "❌ Passwords do not match."
         } else if (!pwdOk) {
             // validateRegPassword already sets a message
-        } else {
-            regCon.innerHTML = ""
+        } else if (regCon) {
+            regCon.textContent = ""
         }
         return false
     }
@@ -89,6 +97,10 @@ function regValidateContent(e) {
 
 function logValidateContent(e) {
     e.preventDefault()
+    if (!logUsername || !logPassword || !logForm) {
+        // fallback: submit normally if elements missing
+        return logForm && logForm.submit()
+    }
 
     let xhttp = new XMLHttpRequest()
     xhttp.open("POST", `/auth/validatecredentials`, true)
@@ -100,46 +112,62 @@ function logValidateContent(e) {
             return
         }
 
-        if (xhttp.status == 200) {
-            logAlr.innerHTML = ""
+        // success -> proceed to actual login
+        if (xhttp.status === 200) {
+            if (logAlr) logAlr.textContent = ""
+            // submit the real login form to establish session via /auth/login
             logForm.submit()
-        } else {
-            logAlr.innerHTML = "❌ Invalid Credential/s."
+            return
+        }
+
+        // locked out -> generic message (do NOT show exact time)
+        if (xhttp.status === 423) {
+            if (logAlr) logAlr.textContent = "❌ Please try again in a few minutes."
             logUsername.classList.add("required-error")
             logPassword.classList.add("required-error")
+            return
         }
-    }
 
-    console.log(logRememberMe.checked)
+        // other client errors -> invalid credentials
+        if (xhttp.status === 400 || xhttp.status === 401) {
+            if (logAlr) logAlr.textContent = "❌ Invalid Credential/s."
+            logUsername.classList.add("required-error")
+            logPassword.classList.add("required-error")
+            return
+        }
+
+        // fallback for server/network errors
+        if (logAlr) logAlr.textContent = "❌ Network or server error — try again."
+    }
 
     xhttp.send(JSON.stringify({
         "username": logUsername.value,
         "password": logPassword.value,
-        "rememberMe": logRememberMe.checked
+        "rememberMe": logRememberMe && logRememberMe.checked
     }))
 
 }
 
 function validateRegPassword() {
-    const pwd = (regPassword.value || "").trim()
-    const conf = (regConPassword.value || "").trim()
+    const pwd = (regPassword && regPassword.value || "").trim()
+    const conf = (regConPassword && regConPassword.value || "").trim()
     const lengthOk = pwd.length >= 8
     const numberOk = /[0-9]/.test(pwd)
     const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(pwd)
 
     if (!lengthOk || !numberOk || !specialOk) {
-        regCon.innerHTML = "❌ Password must be at least 8 characters and include a number and a special character."
-        regPassword.classList.add("required-error")
+        if (regCon) regCon.textContent = "❌ Password must be at least 8 characters and include a number and a special character."
+        if (regPassword) regPassword.classList.add("required-error")
         return false
     }
 
     // if passwords do not match, show that instead
     if (conf !== "" && pwd !== conf) {
-        regCon.innerHTML = "❌ Passwords do not match."
+        if (regCon) regCon.textContent = "❌ Passwords do not match."
         return false
     }
 
-    regCon.innerHTML = ""
-    regPassword.classList.remove("required-error")
+    if (regCon) regCon.textContent = ""
+    if (regPassword) regPassword.classList.remove("required-error")
     return true
 }
