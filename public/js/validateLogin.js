@@ -1,5 +1,10 @@
 const regForm = document.getElementById('lor-register-form')
-const regUsername = document.getElementById('lor-register-username')
+// primary lookup by id; if that id accidentally targets a non-input (duplicate ids), fall back to the input inside the form
+let regUsername = document.getElementById('lor-register-username')
+if (regUsername && regUsername.tagName !== 'INPUT') {
+    const fallback = document.querySelector('#lor-register-form input[name="username"]')
+    if (fallback) regUsername = fallback
+}
 const regPassword = document.getElementById('lor-register-password')
 const regConPassword = document.getElementById('lor-register-confirm-password')
 const regAlr = document.getElementById('lor-reg-alr')
@@ -93,6 +98,48 @@ function regValidateContent(e) {
         }
         return false
     }
+
+    // All client-side checks passed: submit via AJAX to avoid redirects on server validation errors
+    e.preventDefault()
+
+    const payload = {
+        username: regUsername.value.trim(),
+        password: regPassword.value,
+        confirm_password: regConPassword.value,
+        rememberMe: false
+    }
+
+    fetch('/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'text/plain' },
+        body: JSON.stringify(payload),
+        credentials: 'same-origin'
+    }).then(async (res) => {
+        if (res.ok) {
+            // registration succeeded -> redirect to home
+            window.location.href = '/'
+            return
+        }
+
+        // show inline messages, do not redirect
+        const text = await res.text().catch(() => 'Server error')
+
+        if (res.status === 409) {
+            if (regAlr) regAlr.textContent = '❌ Already Taken.'
+            if (regUsername) regUsername.classList.add('required-error')
+        } else if (res.status === 400) {
+            if (regCon) regCon.textContent = `❌ ${text}`
+            regPassword.classList.add('required-error')
+            regConPassword.classList.add('required-error')
+            regUsername.classList.add('required-error')
+        } else {
+            if (regCon) regCon.textContent = '❌ Server error — try again.'
+        }
+    }).catch(() => {
+        if (regCon) regCon.textContent = '❌ Network error — try again.'
+    })
+
+    return false
 }
 
 function logValidateContent(e) {

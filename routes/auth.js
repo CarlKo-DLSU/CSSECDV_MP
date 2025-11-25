@@ -11,13 +11,20 @@ router.post('/register', async (req, res, next) => {
     try {
         const { username, password, confirm_password } = req.body
 
+        // helper to detect XHR/JS client
+        const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
+
         // server-side validation (must mirror client rules)
         if (!username || !password || !confirm_password) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Missing required fields.')}`)
+            const msg = 'Missing required fields.'
+            if (isAjax) return res.status(400).send(msg)
+            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
 
         if (password !== confirm_password) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Passwords do not match.')}`)
+            const msg = 'Passwords do not match.'
+            if (isAjax) return res.status(400).send(msg)
+            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
 
         const lengthOk = password.length >= 8
@@ -25,13 +32,17 @@ router.post('/register', async (req, res, next) => {
         const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(password)
 
         if (!lengthOk || !numberOk || !specialOk) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Password must be at least 8 characters and include a number and a special character.')}`)
+            const msg = 'Password must be at least 8 characters and include a number and a special character.'
+            if (isAjax) return res.status(400).send(msg)
+            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
 
         // check username availability server-side too
         const existing = await query.getProfile({ name: username })
         if (existing) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Username already taken.')}`)
+            const msg = 'Username already taken.'
+            if (isAjax) return res.status(409).send(msg)
+            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
@@ -44,7 +55,9 @@ router.post('/register', async (req, res, next) => {
         // fetch the newly created user and log them in
         const user = await query.getProfile({ name: username })
         if (!user) {
-            return res.redirect(`/error?errorMsg=${encodeURIComponent('Failed to retrieve user after registration.')}`)
+            const msg = 'Failed to retrieve user after registration.'
+            if (isAjax) return res.status(500).send(msg)
+            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
 
         req.login(user, (err) => {
@@ -55,9 +68,14 @@ router.post('/register', async (req, res, next) => {
             if (req.body.rememberMe) {
                 req.session.cookie.maxAge = 1814400000
             }
+            // on XHR return success status, otherwise redirect as before
+            if (isAjax) return res.status(200).send('Success')
             return res.redirect('/')
         })
     } catch (err) {
+        if (req.xhr) {
+            return res.status(500).send(err.message)
+        }
         res.redirect(`/error?errorMsg=${encodeURIComponent(err.message)}`)
     }
 })
