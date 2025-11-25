@@ -27,7 +27,10 @@ const profileSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    // new lockout fields
+    previousPasswords: {
+        type: [String],
+        default: []
+    },
     failedLoginAttempts: {
         type: Number,
         default: 0

@@ -62,87 +62,54 @@ router.post('/', checkAuthenticate, async (req, res) => {
             return res.status(400).render('changepass', { currentUser: req.user, error: 'Current password is incorrect.', success: null })
         }
 
-        const hashed = await bcrypt.hash(new_password, 10)
-
-        console.log('changepass.req.user (id,type):', req.user && req.user._id, typeof (req.user && req.user._id))
-
-        let updateResult = null
-        try {
-            // 1) try findOneAndUpdate by name (common)
-            if (req.user && req.user.name) {
-                try {
-                    const doc = await Profile.findOneAndUpdate(
-                        { name: req.user.name },
-                        { $set: { password: hashed } },
-                        { new: true }
-                    )
-                    if (doc) updateResult = { method: 'findOneAndUpdate(name)', doc }
-                } catch (e) {
-                    console.error('findOneAndUpdate(name) error:', e)
+        const matchCurrent = await bcrypt.compare(new_password, user.password)
+        if (matchCurrent) {
+            if (isAjax(req)) return res.status(400).send('New password must not match your current password.')
+            return res.status(400).render('changepass', { currentUser: req.user, error: 'New password must not match your current password.', success: null })
+        }
+        // check against previousPasswords (if any)
+        if (Array.isArray(user.previousPasswords) && user.previousPasswords.length > 0) {
+            for (const oldHash of user.previousPasswords) {
+                if (await bcrypt.compare(new_password, oldHash)) {
+                    if (isAjax(req)) return res.status(400).send('New password was used previously. Choose a different password.')
+                    return res.status(400).render('changepass', { currentUser: req.user, error: 'New password was used previously. Choose a different password.', success: null })
                 }
             }
-
-            // 2) try findByIdAndUpdate converting to ObjectId if needed
-            if (!updateResult && req.user && req.user._id) {
-                try {
-                    let id = req.user._id
-                    if (typeof id === 'string') {
-                        // try convert string to ObjectId
-                        try { id = mongoose.Types.ObjectId(id) } catch (e) { /* ignore */ }
-                    }
-                    const doc2 = await Profile.findByIdAndUpdate(id, { $set: { password: hashed } }, { new: true })
-                    if (doc2) updateResult = { method: 'findByIdAndUpdate', doc: doc2 }
-                } catch (e) {
-                    console.error('findByIdAndUpdate error:', e)
-                }
-            }
-
-            // 3) try updateOne fallbacks
-            if (!updateResult && Profile && typeof Profile.updateOne === 'function') {
-                try {
-                    const r = await Profile.updateOne({ _id: req.user._id }, { $set: { password: hashed } })
-                    updateResult = { method: 'updateOne(_id)', result: r }
-                } catch (e) {
-                    console.error('updateOne(_id) error:', e)
-                }
-            }
-
-            // 4) fallback to query helper (try _id then name)
-            if (!updateResult && query && typeof query.updateProfile === 'function') {
-                try {
-                    const q = await query.updateProfile({ _id: req.user._id }, { $set: { password: hashed } })
-                    updateResult = { method: 'query.updateProfile(_id)', result: q }
-                } catch (e) {
-                    console.error('query.updateProfile(_id) error:', e)
-                }
-            }
-            if (!updateResult && query && typeof query.updateProfile === 'function' && req.user.name) {
-                try {
-                    const q2 = await query.updateProfile({ name: req.user.name }, { $set: { password: hashed } })
-                    updateResult = { method: 'query.updateProfile(name)', result: q2 }
-                } catch (e) {
-                    console.error('query.updateProfile(name) error:', e)
-                }
-            }
-        } catch (e) {
-            console.error('changepass: unexpected update error', e)
         }
 
-        console.log('changepass.updateResult:', updateResult)
+        const hashed = await bcrypt.hash(new_password, 10)
 
-        // Accept a variety of success indicators
-        const ok = updateResult && (
-            updateResult.doc ||
-            (updateResult.result && (
-                updateResult.result.modifiedCount === 1 ||
-                updateResult.result.nModified === 1 ||
-                updateResult.result.ok === 1 ||
-                updateResult.result.matchedCount === 1
-            ))
-        )
+        const id = (req.user && req.user._id) ? req.user._id : null
+        let updateResult = null
+        try {
+            // use findByIdAndUpdate with atomic update: push then set
+            if (id) {
+                updateResult = await Profile.findByIdAndUpdate(
+                   id,
+                    {
+                        $push: {
+                            // push previous hash to front; no $slice so history is unlimited
+                            previousPasswords: { $each: [user.password], $position: 0 }
+                        },
+                        $set: { password: hashed }
+                    },
+                    { new: true }
+                )
+            }
+            // fallback: if model update didn't run, try query helper
+            if (!updateResult && query && typeof query.updateProfile === 'function') {
+                // push old hash and set new hash (two operations if helper doesn't support $push/$slice)
+                await query.updateProfile({ _id: req.user._id }, { $push: { previousPasswords: { $each: [user.password], $position: 0 } } })
+                await query.updateProfile({ _id: req.user._id }, { $set: { password: hashed } })
+                updateResult = true
+            }
+        } catch (e) {
+            console.error('changepass.update error:', e)
+        }
 
-        if (!ok) {
-            console.error('Password update did not modify a document:', updateResult)
+        // interpret result
+        const success = !!updateResult
+        if (!success) {
             if (isAjax(req)) return res.status(500).send('Failed to update password.')
             return res.status(500).render('changepass', { currentUser: req.user, error: 'Failed to update password.', success: null })
         }
