@@ -17,7 +17,7 @@ const USERNAME_MAX = 30
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 128
 const ANSWER_MIN = 1
-const ANSWER_MAX = 200
+const ANSWER_MAX = 50
 const PENDING_REG_TTL_MS = 15 * 60 * 1000 // 15 minutes for pending registration/session tokens
 
 const allowedQuestions = [
@@ -162,69 +162,101 @@ router.get('/recovery_setup', (req, res) => {
 })
 
 // handle recovery setup: validate question/answer -> create account -> login
-router.post('/recovery_setup', async (req, res, next) => {
+router.post('/recovery_setup', async (req, res) => {
     try {
-        const pending = req.session.pendingRegistration
         const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
-        if (!pending || !pending.expiresAt || pending.expiresAt < Date.now()) {
-            req.session.pendingRegistration = null
-            const msg = 'No pending registration found. Please register again.'
-            if (isAjax) return res.status(400).json({ error: msg })
-            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
+
+        // Expect pending registration stored in session (set earlier)
+        const pending = req.session && req.session.pendingRegistration
+        if (!pending || !pending.username) {
+            if (isAjax) return res.status(403).json({ error: 'No pending registration.' })
+            return res.redirect('/auth/register?error=pending_required')
         }
 
         const { question, answer } = req.body
-        if (!isString(question) || !allowedQuestions.includes(question) || !isValidAnswer(answer)) {
-            const msg = 'Invalid recovery question or answer.'
-            if (isAjax) return res.status(400).json({ error: msg })
-            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
+
+        // basic type checks: answer must be a primitive string (reject arrays/objects)
+        if (Array.isArray(answer) || typeof answer !== 'string' || typeof question !== 'string') {
+            if (isAjax) return res.status(400).json({ error: 'Invalid input.' })
+            return res.redirect('/auth/recovery_setup?error=invalid_input')
         }
 
-        // re-check username uniqueness (race condition protection)
-        const exists = await query.getProfile({ name: pending.username })
-        if (exists) {
-            const msg = 'Username already taken.'
-            // cleanup
-            req.session.pendingRegistration = null
-            if (isAjax) return res.status(409).json({ error: msg })
-            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
+        const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
+        if (FORBIDDEN_RE.test(answer)) {
+            if (isAjax) return res.status(400).json({ error: 'Answer contains invalid characters.' })
+            return res.redirect('/auth/recovery_setup?error=invalid_answer')
         }
 
-        const answerHash = await bcrypt.hash(answer.trim().toLowerCase(), 10) // normalize before hashing
-
-        // create profile using explicit fields only
-        const created = await query.insertProfle({
-            name: pending.username,
-            password: pending.passwordHash,
-            recoveryQuestion: question,
-            recoveryAnswerHash: answerHash,
-            role: pending.role || 'reviewer'
-        })
-
-        if (!created) {
-            const msg = 'Failed to create account.'
-            if (isAjax) return res.status(500).json({ error: msg })
-            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
+        const normalized = answer.trim().toLowerCase()
+        if (normalized.length < ANSWER_MIN || normalized.length > ANSWER_MAX) {
+            if (isAjax) return res.status(400).json({ error: 'Answer length invalid.' })
+            return res.redirect('/auth/recovery_setup?error=answer_length')
         }
 
-        // cleanup pending registration
-        req.session.pendingRegistration = null
+        // question whitelist check
+        const allowedQuestions = [
+            "What is the name of a childhood friend that no one else would know?",
+            "What is your favorite fictional location from a book or movie?",
+            "What is/was the name of your first pet?"
+        ]
+        if (!allowedQuestions.includes(question)) {
+            if (isAjax) return res.status(400).json({ error: 'Invalid question.' })
+            return res.redirect('/auth/recovery_setup?error=invalid_question')
+        }
 
-        // login user
-        const user = await query.getProfile({ name: created.name })
-        req.login(user, (err) => {
-            if (err) return next(err)
-            if (pending.rememberMe) {
-                req.session.cookie.maxAge = 1814400000
+        // hash normalized answer and persist to user record
+        const answerHash = await bcrypt.hash(normalized, 10)
+
+        // create profile if missing, otherwise update existing profile
+        const safeName = String(pending.username).trim()
+        let profile = await Profile.findOne({ name: safeName })
+        if (profile) {
+            // update recovery fields on existing account
+            await Profile.updateOne(
+                { _id: profile._id },
+                { $set: { recoveryQuestion: question, recoveryAnswerHash: answerHash } }
+            )
+            profile = await Profile.findById(profile._id)
+        } else {
+            // create new account from pending registration
+            try {
+                profile = new Profile({
+                    name: safeName,
+                    password: pending.passwordHash,
+                    role: pending.role || 'reviewer',
+                    recoveryQuestion: question,
+                    recoveryAnswerHash: answerHash,
+                    createdAt: new Date()
+                })
+                await profile.save()
+            } catch (e) {
+                // handle duplicate-name race or validation error
+                console.error('recovery_setup create error:', e)
+                if (isAjax) return res.status(500).json({ error: 'Failed to create account. Try again.' })
+                return res.redirect('/auth/recovery_setup?error=account_create_failed')
             }
-            if (isAjax) return res.status(200).json({ redirect: '/' })
+        }
+
+        // clear pending state and persist session
+        req.session.pendingRegistration = null
+        try { await new Promise((r, rej) => req.session.save(err => err ? rej(err) : r())) } catch (saveErr) {
+            console.error('recovery_setup session save error:', saveErr)
+        }
+
+        // log the user in and respond
+        req.login(profile, (loginErr) => {
+            if (loginErr) {
+                console.error('recovery_setup login error:', loginErr)
+                if (isAjax) return res.status(200).json({ success: true, redirect: '/', login: false, message: 'Account created; please log in.' })
+                return res.redirect('/?msg=' + encodeURIComponent('Account created; please log in.'))
+            }
+            if (isAjax) return res.status(200).json({ success: true, redirect: '/' })
             return res.redirect('/')
         })
     } catch (err) {
-        if (req.xhr) {
-            return res.status(500).json({ error: err.message })
-        }
-        next(err)
+        console.error('recovery_setup error:', err)
+        if (req.xhr) return res.status(500).json({ error: 'Server error.' })
+        return res.redirect('/auth/recovery_setup?error=server')
     }
 })
 
@@ -414,7 +446,6 @@ router.post('/recovery_account/verify', async (req, res) => {
         try {
             await new Promise((resolve, reject) => {
                 req.session.save(err => { if (err) return reject(err); resolve() })
-                console.log('DEBUG verify: session saved', { sessionID: req.sessionID, passwordReset: req.session.passwordReset })
             })
         } catch (saveErr) {
             // fallback: return an error for AJAX or redirect with error for non-AJAX
