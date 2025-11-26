@@ -4,7 +4,7 @@ const msgContainer = document.querySelector('.cp-box')
 // validation limits
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 128
-const FORBIDDEN_RE = /[\0\r\n\t\$]/ // disallow control chars and dollar sign
+const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$]/ // disallow control chars and dollar sign
 
 function showMsg(text, success = false) {
     let el = msgContainer.querySelector('.err-msg') || msgContainer.querySelector('.success-msg')
@@ -19,46 +19,42 @@ function showMsg(text, success = false) {
 
 // set maxlength attributes defensively if inputs exist
 if (cpForm) {
-    const curEl = cpForm.querySelector('input[name="current_password"]')
-    const newEl = cpForm.querySelector('input[name="new_password"]')
-    const confEl = cpForm.querySelector('input[name="confirm_password"]')
-    if (curEl) curEl.setAttribute('maxlength', PASSWORD_MAX)
-    if (newEl) newEl.setAttribute('maxlength', PASSWORD_MAX)
-    if (confEl) confEl.setAttribute('maxlength', PASSWORD_MAX)
+    const cur = document.getElementById('current_password')
+    const np = document.getElementById('new_password')
+    const cp = document.getElementById('confirm_password')
+    if (cur) cur.setAttribute('maxlength', PASSWORD_MAX)
+    if (np) np.setAttribute('maxlength', PASSWORD_MAX)
+    if (cp) cp.setAttribute('maxlength', PASSWORD_MAX)
 }
 
 if (cpForm) {
     cpForm.addEventListener('submit', async (e) => {
         e.preventDefault()
+        showMsg('')
 
-        // read values and ensure strings
-        const current = String(cpForm.querySelector('input[name="current_password"]').value || '')
-        const nw = String(cpForm.querySelector('input[name="new_password"]').value || '')
-        const conf = String(cpForm.querySelector('input[name="confirm_password"]').value || '')
+        const current = (document.getElementById('current_password') && document.getElementById('current_password').value) || ''
+        const np = (document.getElementById('new_password') && document.getElementById('new_password').value) || ''
+        const cp = (document.getElementById('confirm_password') && document.getElementById('confirm_password').value) || ''
 
-        // basic presence checks
-        if (!current || !nw || !conf) {
-            showMsg('❌ Missing required fields.')
+        if (!current || !np || !cp) {
+            showMsg('Please fill all fields.')
             return
         }
-
-        // max length / control char checks
-        if (current.length > PASSWORD_MAX || nw.length > PASSWORD_MAX || conf.length > PASSWORD_MAX) {
-            showMsg(`❌ Password must be at most ${PASSWORD_MAX} characters.`)
+        if (np.length < PASSWORD_MIN || np.length > PASSWORD_MAX) {
+            showMsg(`Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters.`)
             return
         }
-        if (FORBIDDEN_RE.test(current) || FORBIDDEN_RE.test(nw) || FORBIDDEN_RE.test(conf)) {
-            showMsg('❌ Invalid characters in password.')
+        // block forbidden characters in passwords
+        if (FORBIDDEN_RE.test(np) || FORBIDDEN_RE.test(current) || FORBIDDEN_RE.test(cp)) {
+            showMsg('Password contains invalid characters.')
             return
         }
-
-        if (nw !== conf) {
-            showMsg('❌ New passwords do not match.')
+        if (np !== cp) {
+            showMsg('New passwords do not match.')
             return
         }
-
-        if (nw.length < PASSWORD_MIN || !/[0-9]/.test(nw) || !/[!@#$%^&*(),.?":{}|<>_\-\\\[\];\'`~+=\/;]/.test(nw)) {
-            showMsg('❌ Password must be at least 8 chars, include a number and a special character.')
+        if (!/[0-9]/.test(np) || !/[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(np)) {
+            showMsg('Password must include a number and a special character.')
             return
         }
 

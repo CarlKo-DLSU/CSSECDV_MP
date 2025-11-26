@@ -41,6 +41,7 @@ function isValidUsername(u) {
 function isValidPassword(p) {
     if (!isString(p)) return false
     if (p.length < PASSWORD_MIN || p.length > PASSWORD_MAX) return false
+    if (/[\x00-\x1F\x7F\\\$]/.test(p)) return false
     return true
 }
 function isValidAnswer(a) {

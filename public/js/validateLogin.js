@@ -283,8 +283,8 @@ function validateRegPassword() {
     const numberOk = /[0-9]/.test(pwd)
     const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(pwd)
 
-    if (!lengthOk || !numberOk || !specialOk) {
-        if (regCon) regCon.textContent = "❌ Password must be at least 8 characters and include a number and a special character."
+    if (!lengthOk || !numberOk || !specialOk || FORBIDDEN_RE.test(pwd)) {
+        if (regCon) regCon.textContent = "❌ Password must be at least 8 characters and include a number and a special character (excluding \\ and \$)"
         if (regPassword) regPassword.classList.add("required-error")
         return false
     }
