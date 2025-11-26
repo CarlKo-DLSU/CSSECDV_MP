@@ -24,6 +24,19 @@ app.set('views', __dirname + "/views")
 app.set('view engine', 'hbs')
 app.set('view options', { layout: '/layouts/header' });
 
+// Handlebars helper to conditionally render blocks by role
+// Usage in templates: {{#hasRole currentUser 'admin'}} ... {{/hasRole}}
+hbs.registerHelper('hasRole', function(user, role, options) {
+    try {
+        if (user && user.role && user.role === role) {
+            return options.fn(this);
+        }
+    } catch (e) {
+        // ignore
+    }
+    return options.inverse(this);
+});
+
 const session = require("express-session")
 const MongoStore = require('connect-mongo');
 const passport = require('passport')

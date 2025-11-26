@@ -61,7 +61,8 @@ router.post('/register', async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(password, 10)
         await query.insertProfle({
             name: username,
-            password: hashedPassword
+            password: hashedPassword,
+            role: 'reviewer'
         })
         const user = await query.getProfile({ name: username })
         if (!user) {

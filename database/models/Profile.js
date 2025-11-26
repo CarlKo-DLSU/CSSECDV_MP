@@ -51,6 +51,13 @@ const profileSchema = new mongoose.Schema({
     lastSuccessfulLogin: { 
         type: Date, 
         default: null 
+    },
+    // New: role field
+    role: {
+        type: String,
+        enum: ["reviewer", "manager", "admin"],
+        default: "reviewer",
+        required: true
     }
 })
 
