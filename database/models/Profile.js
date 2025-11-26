@@ -51,6 +51,15 @@ const profileSchema = new mongoose.Schema({
     lastSuccessfulLogin: { 
         type: Date, 
         default: null 
+    },
+    // new fields for password recovery setup
+    recoveryQuestion: {
+        type: String,
+        default: null
+    },
+    recoveryAnswerHash: {
+        type: String,
+        default: null
     }
 })
 

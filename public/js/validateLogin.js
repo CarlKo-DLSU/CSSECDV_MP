@@ -80,7 +80,7 @@ function regValidateContent(e) {
     const passwordsEmpty = !regPassword || regPassword.value.trim() == ""
     const notMatch = regPassword && regConPassword && regPassword.value.trim() !== regConPassword.value.trim()
     const nameTaken = regAlr && regAlr.textContent !== ""
-  
+
     if (usernamesEmpty || passwordsEmpty || notMatch || nameTaken || !pwdOk) {
         // disable button / stop submission
         e.preventDefault()
@@ -88,7 +88,7 @@ function regValidateContent(e) {
         if (regUsername) regUsername.classList.add("required-error")
         if (regPassword) regPassword.classList.add("required-error")
         if (regConPassword) regConPassword.classList.add("required-error")
-  
+
         if (notMatch && regCon) {
             regCon.textContent = "❌ Passwords do not match."
         } else if (!pwdOk) {
@@ -99,7 +99,7 @@ function regValidateContent(e) {
         return false
     }
 
-    // All client-side checks passed: submit via AJAX to avoid redirects on server validation errors
+    // All client-side checks passed: submit via AJAX to redirect to recovery setup
     e.preventDefault()
 
     const payload = {
@@ -111,12 +111,18 @@ function regValidateContent(e) {
 
     fetch('/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'text/plain' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(payload),
         credentials: 'same-origin'
     }).then(async (res) => {
         if (res.ok) {
-            // registration succeeded -> redirect to home
+            // server returns JSON { redirect: '/auth/recovery_setup' } on success
+            const data = await res.json().catch(() => ({}))
+            if (data && data.redirect) {
+                window.location.href = data.redirect
+                return
+            }
+            // fallback
             window.location.href = '/'
             return
         }
