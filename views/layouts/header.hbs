@@ -63,6 +63,9 @@
                 <a href="/">
                     <img id="logo" src="/imgs/logo.png">
                 </a>
+                {{#if currentUser}}
+                    <div id="lor-last-activity">Last activity: {{formatLastActivity currentUser.lastLoginAttempt currentUser.lastSuccessfulLogin}}</div>
+                {{/if}}
             </div>
             <div class="header-item">
                 <div id="header-search-div">

@@ -177,6 +177,14 @@ body {
     border: 2px solid var(--col-prim);
 }
 
+#lor-last-activity {
+    color: var(--col-prim);
+    font-size: 1rem;
+    height: 15%;
+    padding-left: 50px;
+    padding-top: 20px;
+}
+
 .lor-user-avatar:hover {
     border-color: white;
 }

@@ -43,6 +43,14 @@ const profileSchema = new mongoose.Schema({
     lockUntil: {
         type: Date,
         default: null
+    },
+    lastLoginAttempt: { 
+        type: Date, 
+        default: null 
+    },
+    lastSuccessfulLogin: { 
+        type: Date, 
+        default: null 
     }
 })
 

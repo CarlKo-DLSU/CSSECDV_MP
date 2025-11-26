@@ -45,6 +45,33 @@ app.use(session({
 app.use(passport.session())
 initPassport(passport)
 
+app.use((req, res, next) => {
+    res.locals.currentUser = req.user || null;
+    next();
+});
+
+// simple date formatting helper
+hbs.registerHelper('formatDate', function(date) {
+    if (!date) return 'Never';
+    return new Date(date).toLocaleString();
+});
+
+// new helper: show lastLoginAttempt and append "(unsuccessful)" when last attempt is after last successful login
+hbs.registerHelper('formatLastActivity', function(lastAttempt, lastSuccess) {
+    if (!lastAttempt) return 'Never';
+    try {
+        const attemptTs = new Date(lastAttempt).getTime();
+        const successTs = lastSuccess ? new Date(lastSuccess).getTime() : 0;
+        const dateStr = new Date(lastAttempt).toLocaleString();
+        if (!lastSuccess || attemptTs > successTs) {
+            return `${dateStr} (unsuccessful)`;
+        }
+        return `${dateStr}`;
+    } catch (e) {
+        return 'Unknown';
+    }
+});
+
 // routes
 const homeRouter = require("./routes/home")
 const profileRouter = require("./routes/profile")

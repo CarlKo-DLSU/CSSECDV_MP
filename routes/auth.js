@@ -171,16 +171,24 @@ router.post('/validatecredentials', async (req, res) => {
         if (await bcrypt.compare(password, user.password)) {
             // successful: clear username-level attempts and reset Profile counters
             await clearAttempts(username);
-            await Profile.findByIdAndUpdate(user._id, { failedLoginAttempts: 0, lockUntil: null });
-            res.status(200).send("Success!")
+            await Profile.findByIdAndUpdate(user._id, {
+                failedLoginAttempts: 0,
+                lockUntil: null,
+                lastSuccessfulLogin: new Date(),
+                lastLoginAttempt: new Date()
+            });
+            res.status(200).send("Success!");
         } else {
             // increment failed both at username-level and profile-level
             const { locked } = await recordFailedAttempt(username)
 
             const newAttempts = (user.failedLoginAttempts || 0) + 1;
-            const update = { failedLoginAttempts: newAttempts };
+            const update = {
+                failedLoginAttempts: newAttempts,
+                lastLoginAttempt: new Date()
+            };
             if (newAttempts >= LOCK_THRESHOLD) {
-                update.lockUntil = new Date(Date.now() + LOCK_MS); // lock 5 minutes
+                update.lockUntil = new Date(Date.now() + LOCK_MS);
             }
             await Profile.findByIdAndUpdate(user._id, update, { new: true });
 
