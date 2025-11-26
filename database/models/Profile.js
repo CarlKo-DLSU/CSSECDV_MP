@@ -16,7 +16,7 @@ const profileSchema = new mongoose.Schema({
         validate: {
             validator: v => {
                 if (typeof v !== 'string') return false
-                if (/[\x00-\x1F\x7F\\\$]/.test(v)) return false
+                if (/[\x00-\x1F\x7F\\\$\[\]]/.test(v)) return false
                 const t = v.trim()
                 return t.length >= 1 && t.length <= 30
             },

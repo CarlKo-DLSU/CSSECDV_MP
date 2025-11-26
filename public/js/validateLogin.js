@@ -23,7 +23,7 @@ const errorIcon = "-60px -80px";
 const USERNAME_MAX = 30
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 128
-const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$]/
+const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
 
 // apply maxlength attributes if inputs exist
 if (regUsername) regUsername.setAttribute('maxlength', USERNAME_MAX)
@@ -281,7 +281,7 @@ function validateRegPassword() {
     const conf = (regConPassword && regConPassword.value || "").trim()
     const lengthOk = pwd.length >= PASSWORD_MIN && pwd.length <= PASSWORD_MAX
     const numberOk = /[0-9]/.test(pwd)
-    const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(pwd)
+    const specialOk = /[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(pwd)
 
     if (!lengthOk || !numberOk || !specialOk || FORBIDDEN_RE.test(pwd)) {
         if (regCon) regCon.textContent = "❌ Password must be at least 8 characters and include a number and a special character (excluding \\ and \$)"

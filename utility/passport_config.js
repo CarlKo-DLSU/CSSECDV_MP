@@ -5,7 +5,7 @@ const mongoose = require('mongoose')
 
 // defensive limits (mirror routes/auth.js)
 const USERNAME_MAX = 30
-const FORBIDDEN_RE = /[\0\r\n\t\$]/
+const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
 
 // precompute a dummy hash to mitigate user-enumeration timing differences
 const DUMMY_HASH = bcrypt.hashSync('invalidpassword-placeholder', 10)

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const USERNAME_MAX = 30
-const FORBIDDEN_RE = /[\0\r\n\t\$]/ // disallow control chars and dollar sign
+const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/ // disallow control chars and dollar sign
 
 const loginAttemptSchema = new mongoose.Schema({
     username: {

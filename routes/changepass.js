@@ -9,7 +9,7 @@ const mongoose = require('mongoose')
 // defensive constants
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 128
-const FORBIDDEN_RE = /[\0\r\n\t\$]/ // disallow control chars and dollar sign
+const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/ // disallow control chars and dollar sign
 const DAY_MS = 24 * 60 * 60 * 1000
 
 // helper to detect XHR
@@ -59,7 +59,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
         }
 
         const numberOk = /[0-9]/.test(new_password)
-        const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(new_password)
+        const specialOk = /[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(new_password)
         if (!numberOk || !specialOk) {
             const msg = 'Password must be at least 8 characters and include a number and a special character.'
             if (isAjax(req)) return res.status(400).json({ error: msg })

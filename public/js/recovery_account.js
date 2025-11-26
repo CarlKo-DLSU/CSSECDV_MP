@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const ANSWER_MAX = 50
         const PASSWORD_MIN = 8
         const PASSWORD_MAX = 128
-        const FORBIDDEN_RE = /[\0\r\n\t\$]/ // disallow control chars and dollar sign
+        const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
         const VERIFY_TIMEOUT = 10000
         const RESET_TIMEOUT = 10000
 
@@ -65,11 +65,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const question = String((raQuestion && raQuestion.value) || '')
                 const answer = sanitizeTrim(raAnswer && raAnswer.value)
 
-                if (!username) { showVerifyMsg('Please enter your username.'); raUsername && raUsername.focus(); return }
-                if (username.length > USERNAME_MAX || FORBIDDEN_RE.test(username)) { showVerifyMsg('Invalid username.'); raUsername && raUsername.focus(); return }
-                if (!question) { showVerifyMsg('Please select a recovery question.'); raQuestion && raQuestion.focus(); return }
-                if (!answer) { showVerifyMsg('Please provide an answer.'); raAnswer && raAnswer.focus(); return }
-                if (answer.length > ANSWER_MAX || FORBIDDEN_RE.test(answer)) { showVerifyMsg('Invalid answer.'); raAnswer && raAnswer.focus(); return }
+                if (!username) { showVerifyMsg('❌ Please enter your username.'); raUsername && raUsername.focus(); return }
+                if (username.length > USERNAME_MAX || FORBIDDEN_RE.test(username)) { showVerifyMsg('❌ Invalid username.'); raUsername && raUsername.focus(); return }
+                if (!question) { showVerifyMsg('❌ Please select a recovery question.'); raQuestion && raQuestion.focus(); return }
+                if (!answer) { showVerifyMsg('❌ Please provide an answer.'); raAnswer && raAnswer.focus(); return }
+                if (answer.length > ANSWER_MAX || FORBIDDEN_RE.test(answer)) { showVerifyMsg('❌ Invalid answer.'); raAnswer && raAnswer.focus(); return }
 
                 const payload = { username, question, answer }
                 const controller = new AbortController()
@@ -114,12 +114,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const np = (newPwd && newPwd.value) || ''
                 const cp = (confPwd && confPwd.value) || ''
 
-                if (!np || !cp) { showResetMsg('Please fill both password fields.'); return }
-                if (np !== cp) { showResetMsg('Passwords do not match.'); return }
-                if (np.length < PASSWORD_MIN || np.length > PASSWORD_MAX) { showResetMsg(`Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters.`); return }
-                if (FORBIDDEN_RE.test(np) || FORBIDDEN_RE.test(cp)) { showResetMsg('Password contains invalid characters.'); return }
-                if (!/[0-9]/.test(np) || !/[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(np)) {
-                    showResetMsg('Password must include a number and a special character.')
+                if (!np || !cp) { showResetMsg('❌ Please fill both password fields.'); return }
+                if (np !== cp) { showResetMsg('❌ Passwords do not match.'); return }
+                if (np.length < PASSWORD_MIN || np.length > PASSWORD_MAX) { showResetMsg(`❌ Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters.`); return }
+                if (FORBIDDEN_RE.test(np) || FORBIDDEN_RE.test(cp)) { showResetMsg('❌ Password contains invalid characters.'); return }
+                if (!/[0-9]/.test(np) || !/[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(np)) {
+                    showResetMsg('❌ Password must include a number and a special character.')
                     return
                 }
 

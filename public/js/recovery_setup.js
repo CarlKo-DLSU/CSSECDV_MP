@@ -37,10 +37,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 showError('Invalid answer.')
                 return
             }
-            if (!qVal) { showError('Please select a recovery question.'); question && question.focus(); return }
-            if (!aVal) { showError('Please provide an answer.'); answer && answer.focus(); return }
-            if (aVal.length > ANSWER_MAX) { showError('Answer is too long.'); answer && answer.focus(); return }
-            if (FORBIDDEN_RE.test(aRaw)) { showError('Answer contains invalid characters.'); answer && answer.focus(); return }
+            if (!qVal) { showError('❌ Please select a recovery question.'); question && question.focus(); return }
+            if (!aVal) { showError('❌ Please provide an answer.'); answer && answer.focus(); return }
+            if (aVal.length > ANSWER_MAX) { showError('❌ Answer is too long.'); answer && answer.focus(); return }
+            if (FORBIDDEN_RE.test(aRaw)) { showError('❌ Answer contains invalid characters.'); answer && answer.focus(); return }
 
             submitBtn && (submitBtn.disabled = true)
 

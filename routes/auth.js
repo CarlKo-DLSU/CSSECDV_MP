@@ -29,11 +29,11 @@ const allowedQuestions = [
 function isString(v) { return typeof v === 'string' }
 function containsMongoOperator(v) {
     if (!isString(v)) return true
-    return /[\x00-\x1F\x7F\$]/.test(v)
+    return /[\x00-\x1F\x7F\\\$\[\]]/.test(v)
 }
 function isValidUsername(u) {
     if (!isString(u)) return false
-    if (/[\x00-\x1F\x7F\\\$]/.test(u)) return false
+    if (/[\x00-\x1F\x7F\\\$\[\]]/.test(u)) return false
     const s = u.trim()
     if (s.length < USERNAME_MIN || s.length > USERNAME_MAX) return false
     return true
@@ -41,7 +41,7 @@ function isValidUsername(u) {
 function isValidPassword(p) {
     if (!isString(p)) return false
     if (p.length < PASSWORD_MIN || p.length > PASSWORD_MAX) return false
-    if (/[\x00-\x1F\x7F\\\$]/.test(p)) return false
+    if (/[\x00-\x1F\x7F\\\$\[\]]/.test(p)) return false
     return true
 }
 function isValidAnswer(a) {
@@ -54,7 +54,7 @@ function isValidAnswer(a) {
 function containsRawInvalidChars(raw) {
     if (!isString(raw)) return true
     // any ASCII control (0x00-0x1F), DEL (0x7F) or dollar sign
-    if (/[\x00-\x1F\x7F\\\$]/.test(raw)) return true
+    if (/[\x00-\x1F\x7F\\\$\[\]]/.test(raw)) return true
     // reject if raw has leading/trailing whitespace (including newline/tab)
     if (raw !== raw.trim()) return true
     return false
@@ -107,7 +107,7 @@ router.post('/register', async (req, res, next) => {
         }
 
         const numberOk = /[0-9]/.test(password)
-        const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(password)
+        const specialOk = /[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(password)
         if (!numberOk || !specialOk) {
             const msg = 'Password must include a number and a special character.'
             if (isAjax) return res.status(400).json({ error: msg })
@@ -491,7 +491,7 @@ router.post('/recovery_account/reset', async (req, res) => {
         }
 
         const numberOk = /[0-9]/.test(new_password)
-        const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(new_password)
+        const specialOk = /[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(new_password)
         if (!numberOk || !specialOk) {
             if (isAjax) return res.status(400).json({ error: 'Password must include a number and a special character.' })
             return res.redirect('/auth/recovery_account?error=weak_password')

@@ -4,7 +4,7 @@ const msgContainer = document.querySelector('.cp-box')
 // validation limits
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 128
-const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$]/ // disallow control chars and dollar sign
+const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/ // disallow control chars and dollar sign
 
 function showMsg(text, success = false) {
     let el = msgContainer.querySelector('.err-msg') || msgContainer.querySelector('.success-msg')
@@ -58,7 +58,7 @@ if (cpForm) {
             showMsg('❌ New passwords do not match.')
             return
         }
-        if (!/[0-9]/.test(np) || !/[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(np)) {
+        if (!/[0-9]/.test(np) || !/[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(np)) {
             showMsg('❌ Password must include a number and a special character.')
             return
         }
