@@ -93,7 +93,6 @@ const reviewRouter = require("./routes/review")
 const authRouter = require("./routes/auth")
 const editRouter = require("./routes/edit")
 const changePassRouter = require("./routes/changepass")
-const recoverSetupRouter = require('./routes/recoverSetup')
 
 app.use("/", homeRouter)
 app.use("/profile", profileRouter)
@@ -102,7 +101,6 @@ app.use("/review", reviewRouter)
 app.use("/auth", authRouter)
 app.use("/edit", editRouter)
 app.use("/changepass", changePassRouter)
-app.use('/recover-setup', recoverSetupRouter)   // add this line
 
 // listen! :3
 const server = app.listen(process.env.PORT, function() {
