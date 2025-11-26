@@ -24,6 +24,19 @@ app.set('views', __dirname + "/views")
 app.set('view engine', 'hbs')
 app.set('view options', { layout: '/layouts/header' });
 
+// Handlebars helper to conditionally render blocks by role
+// Usage in templates: {{#hasRole currentUser 'admin'}} ... {{/hasRole}}
+hbs.registerHelper('hasRole', function(user, role, options) {
+    try {
+        if (user && user.role && user.role === role) {
+            return options.fn(this);
+        }
+    } catch (e) {
+        // ignore
+    }
+    return options.inverse(this);
+});
+
 const session = require("express-session")
 const MongoStore = require('connect-mongo');
 const passport = require('passport')
@@ -80,6 +93,7 @@ const reviewRouter = require("./routes/review")
 const authRouter = require("./routes/auth")
 const editRouter = require("./routes/edit")
 const changePassRouter = require("./routes/changepass")
+const recoverSetupRouter = require('./routes/recoverSetup')
 
 app.use("/", homeRouter)
 app.use("/profile", profileRouter)
@@ -88,7 +102,7 @@ app.use("/review", reviewRouter)
 app.use("/auth", authRouter)
 app.use("/edit", editRouter)
 app.use("/changepass", changePassRouter)
-
+app.use('/recover-setup', recoverSetupRouter)   // add this line
 
 // listen! :3
 const server = app.listen(process.env.PORT, function() {

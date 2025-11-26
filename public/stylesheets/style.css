@@ -1458,3 +1458,21 @@ body {
     width: 300px;
     padding: 20px;
 }
+
+#admin-title{
+    font-size: 2rem;
+    margin-top: 20px;
+    color: white;
+    padding-bottom: 1rem;
+}
+
+.admin-form {
+    padding: .5rem;
+    margin-bottom: .3rem;
+}
+
+.admin-menu{
+    padding: 1.5rem;
+    background-color: white;
+    border-radius: 10px;
+}

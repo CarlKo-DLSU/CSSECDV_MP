@@ -60,6 +60,13 @@ const profileSchema = new mongoose.Schema({
     recoveryAnswerHash: {
         type: String,
         default: null
+    },
+    // New: role field
+    role: {
+        type: String,
+        enum: ["reviewer", "manager", "admin"],
+        default: "reviewer",
+        required: true
     }
 })
 

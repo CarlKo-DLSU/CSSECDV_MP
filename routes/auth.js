@@ -64,6 +64,7 @@ router.post('/register', async (req, res, next) => {
         req.session.pendingRegistration = {
             username: username,
             passwordHash: hashedPassword,
+            role: 'reviewer',
             rememberMe: !!req.body.rememberMe,
             createdAt: Date.now()
         }
@@ -74,6 +75,7 @@ router.post('/register', async (req, res, next) => {
         } else {
             return res.redirect('/auth/recovery_setup')
         }
+
     } catch (err) {
         if (req.xhr) {
             return res.status(500).json({ error: err.message })
