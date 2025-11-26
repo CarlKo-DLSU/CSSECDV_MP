@@ -7,7 +7,7 @@
     "start": "node index.js",
     "devStart": "nodemon index.js",
     "populate": "node ./populate/run.js",
-    "seed:roles": "node scripts/seedroles.js"
+    "seed:roles": "node scripts/seed_roles.js"
   },
   "repository": {
     "type": "git",
