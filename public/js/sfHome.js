@@ -34,10 +34,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     filterForm.addEventListener("submit", (e) => {
         e.preventDefault()
-        somethingCHanged()
+        console.log("sfHome -> submit event, filter.value:", filter ? filter.value : null)
+        somethingChanged()
     })
 
     function somethingChanged() {
-        window.location.href = `/?sort=${sort.value}&order=${order.checked ? "asc" : "desc"}&min=${min.value}&max=${max.value}&filter=${filter ? filter.value : ""}`
+        // use current pathname (like sfReviews.js does) and encode params
+        const path = window.location.origin + window.location.pathname
+        const vals = {
+            sort: encodeURIComponent(sort.value || ""),
+            order: order.checked ? "asc" : "desc",
+            min: encodeURIComponent(min.value || ""),
+            max: encodeURIComponent(max.value || ""),
+            filter: encodeURIComponent((filter && filter.value) ? filter.value : "")
+        }
+        console.log("sfHome -> navigating with:", vals)
+        window.location.href = `${path}?sort=${vals.sort}&order=${vals.order}&min=${vals.min}&max=${vals.max}&filter=${vals.filter}`
     }
 })

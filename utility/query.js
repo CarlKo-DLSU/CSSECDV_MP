@@ -31,15 +31,39 @@ function safeFilter(raw) {
     const out = {}
     for (const k of Object.keys(raw)) {
         const v = raw[k]
-        // reject if value is an object/array (operators like {$ne:...} blocked) unless it's an ObjectId
+        // allow plain primitives
         if (isPlainValue(v)) {
             out[k] = v
-        } else if (isValidObjectId(v)) {
-            // keep ObjectId instances, convert string -> ObjectId
-            out[k] = (typeof v === 'string') ? mongoose.Types.ObjectId(v) : v
-        } else {
-            // ignore suspicious fields
+            continue
         }
+
+        // allow RegExp instances directly (used for name regex searching)
+        if (v instanceof RegExp) {
+            out[k] = v
+            continue
+        }
+
+        // allow {$regex: string|RegExp, $options?: string} shape (sanitize options)
+        if (v && typeof v === 'object' && Object.prototype.hasOwnProperty.call(v, '$regex')) {
+            const rxVal = v.$regex
+            const opts = v.$options
+            const safeOpts = (typeof opts === 'string' && /^[imsux]*$/.test(opts)) ? opts : ''
+            try {
+                const reg = rxVal instanceof RegExp ? rxVal : new RegExp(String(rxVal), safeOpts)
+                out[k] = reg
+            } catch (e) {
+                // ignore invalid regex
+            }
+            continue
+        }
+
+        // accept ObjectId-like values
+        if (isValidObjectId(v)) {
+            out[k] = (typeof v === 'string') ? mongoose.Types.ObjectId(v) : v
+            continue
+        }
+
+        // ignore suspicious or complex fields
     }
     return out
 }
