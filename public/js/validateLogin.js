@@ -19,6 +19,19 @@ const logRememberMe = document.getElementById('lor-remember-me')
 const normalIcon = "-40px -80px";
 const errorIcon = "-60px -80px";
 
+// defensive constants (mirror server)
+const USERNAME_MAX = 30
+const PASSWORD_MIN = 8
+const PASSWORD_MAX = 128
+const FORBIDDEN_RE = /[\0\r\n\t\$]/ // disallow control chars and dollar sign
+
+// apply maxlength attributes if inputs exist
+if (regUsername) regUsername.setAttribute('maxlength', USERNAME_MAX)
+if (regPassword) regPassword.setAttribute('maxlength', PASSWORD_MAX)
+if (regConPassword) regConPassword.setAttribute('maxlength', PASSWORD_MAX)
+if (logUsername) logUsername.setAttribute('maxlength', USERNAME_MAX)
+if (logPassword) logPassword.setAttribute('maxlength', PASSWORD_MAX)
+
 // attach only when form exists (prevents silent failure if script runs before DOM or id differs)
 if (regForm) {
     regForm.addEventListener('submit', regValidateContent)
@@ -32,26 +45,48 @@ if (logForm) {
     console.warn('Login form (lor-login-form) not found - client validation may be bypassed')
 }
 
+// debounce for username-availability checks
+let nameCheckTimer = 0
 if (regUsername) {
     regUsername.addEventListener("keyup", () => {
-        let xhttp = new XMLHttpRequest()
-        xhttp.open("POST", `/auth/nametaken`, true)
-        xhttp.setRequestHeader("Content-type", "application/json; charset=UTF-8")
+        resetReg()
+        const raw = String(regUsername.value || '')
+        const username = raw.trim()
 
-        xhttp.onreadystatechange = () => {
-            if (xhttp.readyState != 4) {
-                return
-            }
-
-            if (xhttp.status == 200) {
-                regAlr.textContent = ""
-            } else {
-                regAlr.textContent = "❌ Already Taken."
-            }
+        // quick client-side rejects
+        if (username.length === 0) {
+            regAlr.textContent = ""
+            return
+        }
+        if (username.length > USERNAME_MAX || FORBIDDEN_RE.test(username)) {
+            regAlr.textContent = "❌ Invalid username."
+            return
         }
 
-        xhttp.send(JSON.stringify({ "username": regUsername.value, }))
-        resetReg()
+        clearTimeout(nameCheckTimer)
+        nameCheckTimer = setTimeout(async () => {
+            try {
+                const controller = new AbortController()
+                const t = setTimeout(() => controller.abort(), 8000)
+
+                const res = await fetch('/auth/nametaken', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json; charset=UTF-8', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ "username": username }),
+                    signal: controller.signal
+                })
+                clearTimeout(t)
+                if (res.ok) {
+                    regAlr.textContent = ""
+                } else {
+                    regAlr.textContent = "❌ Already Taken."
+                }
+            } catch (e) {
+                // network or timeout - don't block registration, show soft warning
+                console.warn('Name check failed', e)
+            }
+        }, 300)
     })
 }
 
@@ -73,10 +108,26 @@ function resetLog() {
     if (logAlr) logAlr.textContent = ""
 }
 
+function isValidUsernameClient(u) {
+    if (!u || typeof u !== 'string') return false
+    const s = u.trim()
+    if (s.length === 0 || s.length > USERNAME_MAX) return false
+    if (FORBIDDEN_RE.test(s)) return false
+    return true
+}
+
+function isValidPasswordClient(p) {
+    if (!p || typeof p !== 'string') return false
+    if (p.length < PASSWORD_MIN || p.length > PASSWORD_MAX) return false
+    if (FORBIDDEN_RE.test(p)) return false
+    return true
+}
+
 function regValidateContent(e) {
     // ensure we check password rules first so message is set
     const pwdOk = validateRegPassword()
-    const usernamesEmpty = !regUsername || regUsername.value.trim() == ""
+    const usernameVal = regUsername ? regUsername.value.trim() : ''
+    const usernamesEmpty = !isValidUsernameClient(usernameVal)
     const passwordsEmpty = !regPassword || regPassword.value.trim() == ""
     const notMatch = regPassword && regConPassword && regPassword.value.trim() !== regConPassword.value.trim()
     const nameTaken = regAlr && regAlr.textContent !== ""
@@ -103,18 +154,23 @@ function regValidateContent(e) {
     e.preventDefault()
 
     const payload = {
-        username: regUsername.value.trim(),
+        username: usernameVal,
         password: regPassword.value,
         confirm_password: regConPassword.value,
         rememberMe: false
     }
 
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000)
+
     fetch('/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         body: JSON.stringify(payload),
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        signal: controller.signal
     }).then(async (res) => {
+        clearTimeout(timeout)
         if (res.ok) {
             // server returns JSON { redirect: '/auth/recovery_setup' } on success
             const data = await res.json().catch(() => ({}))
@@ -128,21 +184,29 @@ function regValidateContent(e) {
         }
 
         // show inline messages, do not redirect
-        const text = await res.text().catch(() => 'Server error')
+        let text = ''
+        try {
+            const j = await res.json().catch(() => null)
+            if (j && j.error) text = j.error
+        } catch (err) { /* ignore */ }
+        if (!text) {
+            text = await res.text().catch(() => 'Server error')
+        }
 
         if (res.status === 409) {
             if (regAlr) regAlr.textContent = '❌ Already Taken.'
             if (regUsername) regUsername.classList.add('required-error')
         } else if (res.status === 400) {
             if (regCon) regCon.textContent = `❌ ${text}`
-            regPassword.classList.add('required-error')
-            regConPassword.classList.add('required-error')
-            regUsername.classList.add('required-error')
+            if (regPassword) regPassword.classList.add('required-error')
+            if (regConPassword) regConPassword.classList.add('required-error')
+            if (regUsername) regUsername.classList.add('required-error')
         } else {
             if (regCon) regCon.textContent = '❌ Server error — try again.'
         }
-    }).catch(() => {
-        if (regCon) regCon.textContent = '❌ Network error — try again.'
+    }).catch((err) => {
+        clearTimeout(timeout)
+        if (regCon) regCon.textContent = (err && err.name === 'AbortError') ? '❌ Request timed out.' : '❌ Network error — try again.'
     })
 
     return false
@@ -155,56 +219,63 @@ function logValidateContent(e) {
         return logForm && logForm.submit()
     }
 
-    let xhttp = new XMLHttpRequest()
-    xhttp.open("POST", `/auth/validatecredentials`, true)
-    xhttp.setRequestHeader("Content-type", "application/json; charset=UTF-8")
-    xhttp.withCredentials = true
+    const payload = {
+        username: String(logUsername.value || ''),
+        password: String(logPassword.value || ''),
+        rememberMe: !!(logRememberMe && logRememberMe.checked)
+    }
 
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState != 4) {
-            return
-        }
+    // basic client-side check
+    if (!isValidUsernameClient(payload.username) || !isValidPasswordClient(payload.password)) {
+        if (logAlr) logAlr.textContent = "❌ Invalid Credential/s."
+        logUsername.classList.add("required-error")
+        logPassword.classList.add("required-error")
+        return
+    }
 
-        // success -> proceed to actual login
-        if (xhttp.status === 200) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
+    fetch('/auth/validatecredentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload),
+        signal: controller.signal
+    }).then(async (res) => {
+        clearTimeout(timeout)
+        if (res.status === 200) {
             if (logAlr) logAlr.textContent = ""
             // submit the real login form to establish session via /auth/login
             logForm.submit()
             return
         }
 
-        // locked out -> generic message (do NOT show exact time)
-        if (xhttp.status === 423) {
+        if (res.status === 423) {
             if (logAlr) logAlr.textContent = "❌ Please try again in a few minutes."
             logUsername.classList.add("required-error")
             logPassword.classList.add("required-error")
             return
         }
 
-        // other client errors -> invalid credentials
-        if (xhttp.status === 400 || xhttp.status === 401) {
+        if (res.status === 400 || res.status === 401) {
             if (logAlr) logAlr.textContent = "❌ Invalid Credential/s."
             logUsername.classList.add("required-error")
             logPassword.classList.add("required-error")
             return
         }
 
-        // fallback for server/network errors
         if (logAlr) logAlr.textContent = "❌ Network or server error — try again."
-    }
-
-    xhttp.send(JSON.stringify({
-        "username": logUsername.value,
-        "password": logPassword.value,
-        "rememberMe": logRememberMe && logRememberMe.checked
-    }))
-
+    }).catch((err) => {
+        clearTimeout(timeout)
+        if (logAlr) logAlr.textContent = (err && err.name === 'AbortError') ? '❌ Request timed out.' : "❌ Network or server error — try again."
+    })
 }
 
 function validateRegPassword() {
     const pwd = (regPassword && regPassword.value || "").trim()
     const conf = (regConPassword && regConPassword.value || "").trim()
-    const lengthOk = pwd.length >= 8
+    const lengthOk = pwd.length >= PASSWORD_MIN && pwd.length <= PASSWORD_MAX
     const numberOk = /[0-9]/.test(pwd)
     const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(pwd)
 

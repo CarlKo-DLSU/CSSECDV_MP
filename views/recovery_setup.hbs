@@ -4,20 +4,20 @@
     <p>You're registering as: <strong>{{username}}</strong></p>
     <p>Please choose one recovery question and provide an answer. The answer will be normalized and stored hashed — keep it something only you know.</p>
 
-    <form id="recovery-setup-form" method="POST" action="/auth/recovery_setup">
-        <label for="reco-question">Recovery question</label>
+    <form id="recovery-setup-form" method="POST" action="/auth/recovery_setup" novalidate>
+        <label for="reco-question">Recovery question: </label>
         <select id="reco-question" name="question" required>
             <option value="">-- Select a question --</option>
             <option value="What is the name of a childhood friend that no one else would know?">What is the name of a childhood friend that no one else would know?</option>
             <option value="What is your favorite fictional location from a book or movie?">What is your favorite fictional location from a book or movie?</option>
             <option value="What is/was the name of your first pet?">What is/was the name of your first pet?</option>
         </select>
-
+        <br/>
         <label for="reco-answer">Answer</label>
         <input id="reco-answer" name="answer" type="text" placeholder="Type your answer here" autocomplete="off" required>
 
         <div class="form-actions">
-            <button type="submit" class="btn primary">Complete Registration</button>
+            <button id="reco-submit" type="submit" class="btn primary">Complete Registration</button>
             <a href="/" class="btn link">Cancel</a>
         </div>
 
@@ -26,59 +26,108 @@
 
     <script>
         (function () {
+            // defensive client constraints (mirror server)
+            const ANSWER_MAX = 200
+            const FORBIDDEN_RE = /[\0\r\n\t\$]/ // disallow control chars and dollar sign
+            const TIMEOUT = 10000
+
             const form = document.getElementById('recovery-setup-form')
             const question = document.getElementById('reco-question')
             const answer = document.getElementById('reco-answer')
             const errEl = document.getElementById('reco-error')
+            const submitBtn = document.getElementById('reco-submit')
 
             if (!form) return
 
+            // set defensive maxlengths
+            if (answer) answer.setAttribute('maxlength', ANSWER_MAX)
+
+            function showError(msg, success = false) {
+                errEl.textContent = msg
+                errEl.style.color = success ? 'green' : ''
+            }
+
+            function sanitizeTrim(s) {
+                return (s || '').toString().trim()
+            }
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault()
-                errEl.textContent = ''
+                showError('')
 
-                const qVal = question.value
-                const aVal = (answer.value || '').trim()
+                const qVal = String(question.value || '')
+                const aVal = sanitizeTrim(answer.value)
 
                 if (!qVal) {
-                    errEl.textContent = 'Please select a recovery question.'
+                    showError('Please select a recovery question.')
                     question.focus()
                     return
                 }
                 if (!aVal) {
-                    errEl.textContent = 'Please provide an answer.'
+                    showError('Please provide an answer.')
+                    answer.focus()
+                    return
+                }
+                if (aVal.length > ANSWER_MAX) {
+                    showError('Answer is too long.')
+                    answer.focus()
+                    return
+                }
+                if (FORBIDDEN_RE.test(aVal)) {
+                    showError('Answer contains invalid characters.')
                     answer.focus()
                     return
                 }
 
-                // Submit via fetch so server can respond with JSON or redirect
+                // disable while request in-flight
+                submitBtn.disabled = true
+
+                const controller = new AbortController()
+                const t = setTimeout(() => controller.abort(), TIMEOUT)
+
                 try {
                     const res = await fetch(form.action, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
                         credentials: 'same-origin',
-                        body: JSON.stringify({ question: qVal, answer: aVal })
+                        body: JSON.stringify({ question: qVal, answer: aVal }),
+                        signal: controller.signal
                     })
+                    clearTimeout(t)
 
                     if (res.ok) {
+                        // server may return JSON with redirect
                         const data = await res.json().catch(() => ({}))
                         if (data && data.redirect) {
                             window.location.href = data.redirect
                             return
                         }
+                        // fallback
                         window.location.href = '/'
                         return
                     }
 
-                    // display server-provided message if available
-                    const text = await res.text().catch(() => '')
-                    if (text) {
-                        errEl.textContent = text
-                    } else {
-                        errEl.textContent = 'Failed to complete registration. Try again.'
+                    // prefer JSON error message
+                    let text = ''
+                    try {
+                        const j = await res.json().catch(() => null)
+                        if (j && j.error) text = j.error
+                    } catch (err) { /* ignore */ }
+
+                    if (!text) {
+                        text = await res.text().catch(() => 'Failed to complete registration. Try again.')
                     }
+
+                    showError(text)
                 } catch (err) {
-                    errEl.textContent = 'Network error — try again.'
+                    showError(err && err.name === 'AbortError' ? 'Request timed out. Try again.' : 'Network error — try again.')
+                } finally {
+                    clearTimeout(t)
+                    submitBtn.disabled = false
                 }
             })
         })();

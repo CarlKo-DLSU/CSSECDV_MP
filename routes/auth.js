@@ -11,6 +11,50 @@ const LoginAttempt = require('../database/models/LoginAttempt');
 const LOCK_THRESHOLD = 5
 const LOCK_MS = 5 * 60 * 1000 // 5 minutes
 
+// Limits / constants
+const USERNAME_MIN = 1
+const USERNAME_MAX = 30
+const PASSWORD_MIN = 8
+const PASSWORD_MAX = 128
+const ANSWER_MIN = 1
+const ANSWER_MAX = 200
+const PENDING_REG_TTL_MS = 15 * 60 * 1000 // 15 minutes for pending registration/session tokens
+
+const allowedQuestions = [
+    "What is the name of a childhood friend that no one else would know?",
+    "What is your favorite fictional location from a book or movie?",
+    "What is/was the name of your first pet?"
+]
+
+function isString(v) { return typeof v === 'string' }
+function containsMongoOperator(v) {
+    // rejects strings beginning with $ or containing {"$"} style payloads
+    if (!isString(v)) return true
+    return v.indexOf('$') !== -1
+}
+function isValidUsername(u) {
+    if (!isString(u)) return false
+    const s = u.trim()
+    if (s.length < USERNAME_MIN || s.length > USERNAME_MAX) return false
+    // disallow control chars and null byte
+    if (/[\0\r\n\t]/.test(s)) return false
+    // disallow $ to avoid operator confusion; allow most visible chars otherwise
+    if (s.includes('$')) return false
+    return true
+}
+function isValidPassword(p) {
+    if (!isString(p)) return false
+    if (p.length < PASSWORD_MIN || p.length > PASSWORD_MAX) return false
+    return true
+}
+function isValidAnswer(a) {
+    if (!isString(a)) return false
+    const s = a.trim()
+    if (s.length < ANSWER_MIN || s.length > ANSWER_MAX) return false
+    if (s.includes('$')) return false
+    return true
+}
+
 async function recordFailedAttempt(username) {
     const la = await LoginAttempt.findOneAndUpdate(
         { username },
@@ -34,25 +78,36 @@ router.post('/register', async (req, res, next) => {
     try {
         const { username, password, confirm_password } = req.body
         const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
-        if (!username || !password || !confirm_password) {
-            const msg = 'Missing required fields.'
+
+        if (!isValidUsername(username)) {
+            const msg = 'Invalid username.'
             if (isAjax) return res.status(400).json({ error: msg })
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
+        if (!isValidPassword(password) || !isValidPassword(confirm_password)) {
+            const msg = 'Invalid password.'
+            if (isAjax) return res.status(400).json({ error: msg })
+            return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
+        }
+
         if (password !== confirm_password) {
             const msg = 'Passwords do not match.'
             if (isAjax) return res.status(400).json({ error: msg })
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
-        const lengthOk = password.length >= 8
+
         const numberOk = /[0-9]/.test(password)
         const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(password)
-        if (!lengthOk || !numberOk || !specialOk) {
-            const msg = 'Password must be at least 8 characters and include a number and a special character.'
+        if (!numberOk || !specialOk) {
+            const msg = 'Password must include a number and a special character.'
             if (isAjax) return res.status(400).json({ error: msg })
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
-        const existing = await query.getProfile({ name: username })
+
+        // normalized sanitized username for DB operations
+        const safeUsername = username.trim()
+
+        const existing = await query.getProfile({ name: safeUsername })
         if (existing) {
             const msg = 'Username already taken.'
             if (isAjax) return res.status(409).json({ error: msg })
@@ -62,11 +117,12 @@ router.post('/register', async (req, res, next) => {
         // hash password now and store pending registration in session (will finish after recovery setup)
         const hashedPassword = await bcrypt.hash(password, 10)
         req.session.pendingRegistration = {
-            username: username,
+            username: safeUsername,
             passwordHash: hashedPassword,
             role: 'reviewer',
             rememberMe: !!req.body.rememberMe,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            expiresAt: Date.now() + PENDING_REG_TTL_MS
         }
 
         // respond with redirect to recovery setup (AJAX-aware)
@@ -84,11 +140,12 @@ router.post('/register', async (req, res, next) => {
     }
 })
 
-// show recovery setup page (user will create the Handlebars template later)
+// show recovery setup page
 router.get('/recovery_setup', (req, res) => {
     const pending = req.session.pendingRegistration
-    if (!pending) {
-        return res.redirect('/?errorMsg=' + encodeURIComponent('No pending registration found. Please register again.'))
+    if (!pending || !pending.expiresAt || pending.expiresAt < Date.now()) {
+        req.session.pendingRegistration = null
+        return res.redirect('/?errorMsg=' + encodeURIComponent('No pending registration found or it expired. Please register again.'))
     }
     // pass username to the page so it can be displayed
     return res.render('recovery_setup', { username: pending.username })
@@ -99,19 +156,15 @@ router.post('/recovery_setup', async (req, res, next) => {
     try {
         const pending = req.session.pendingRegistration
         const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
-        if (!pending) {
+        if (!pending || !pending.expiresAt || pending.expiresAt < Date.now()) {
+            req.session.pendingRegistration = null
             const msg = 'No pending registration found. Please register again.'
             if (isAjax) return res.status(400).json({ error: msg })
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
         }
 
         const { question, answer } = req.body
-        const allowedQuestions = [
-            "What is the name of a childhood friend that no one else would know?",
-            "What is your favorite fictional location from a book or movie?",
-            "What is/was the name of your first pet?"
-        ]
-        if (!question || !answer || !allowedQuestions.includes(question) || answer.trim().length < 1) {
+        if (!isString(question) || !allowedQuestions.includes(question) || !isValidAnswer(answer)) {
             const msg = 'Invalid recovery question or answer.'
             if (isAjax) return res.status(400).json({ error: msg })
             return res.redirect(`/error?errorMsg=${encodeURIComponent(msg)}`)
@@ -129,12 +182,13 @@ router.post('/recovery_setup', async (req, res, next) => {
 
         const answerHash = await bcrypt.hash(answer.trim().toLowerCase(), 10) // normalize before hashing
 
-        // create profile
+        // create profile using explicit fields only
         const created = await query.insertProfle({
             name: pending.username,
             password: pending.passwordHash,
             recoveryQuestion: question,
-            recoveryAnswerHash: answerHash
+            recoveryAnswerHash: answerHash,
+            role: pending.role || 'reviewer'
         })
 
         if (!created) {
@@ -216,10 +270,16 @@ router.post('/login', async (req, res, next) => {
     }
 })
 
-// ... rest of file unchanged ...
+// validatecredentials, logout and recovery_account routes: apply strict checks where appropriate
+
 router.post('/validatecredentials', async (req, res) => {
     const username = req.body.username
     const password = req.body.password
+
+    if (!isValidUsername(username) || !isString(password)) {
+        return res.status(400).send("Bad Credentials")
+    }
+
     const user = await query.getProfile({ name: username })
 
     // check username-level lock
@@ -298,67 +358,109 @@ router.get('/recovery_account', (req, res) => {
 router.post('/recovery_account/verify', async (req, res) => {
     try {
         const { username, question, answer } = req.body
-        if (!username || !question || !answer) {
-            return res.status(400).json({ error: 'Missing fields' })
+
+        // detect XHR / AJAX requests
+        const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
+
+        if (!isValidUsername(username) || !isString(question) || !isValidAnswer(answer)) {
+            if (isAjax) return res.status(400).json({ error: 'Missing or invalid fields' })
+            return res.redirect('/auth/recovery_account?error=invalid')
         }
 
-        const user = await query.getProfile({ name: username })
-        if (!user) return res.status(404).json({ error: 'User not found' })
+        if (!allowedQuestions.includes(question)) {
+            if (isAjax) return res.status(400).json({ error: 'Invalid question selected' })
+            return res.redirect('/auth/recovery_account?error=invalid_question')
+        }
 
-        // verify question matches stored question
+        const user = await query.getProfile({ name: username.trim() })
+        if (!user) {
+            if (isAjax) return res.status(404).json({ error: 'User not found' })
+            return res.redirect('/auth/recovery_account?error=notfound')
+        }
+
         if (!user.recoveryQuestion || user.recoveryQuestion !== question) {
-            return res.status(400).json({ error: 'Recovery question does not match' })
+            if (isAjax) return res.status(400).json({ error: 'Recovery question does not match' })
+            return res.redirect('/auth/recovery_account?error=question_mismatch')
         }
 
-        // compare normalized answer
         const normalized = answer.trim().toLowerCase()
         const match = await bcrypt.compare(normalized, user.recoveryAnswerHash || '')
-        if (!match) return res.status(401).json({ error: 'Incorrect answer' })
+        if (!match) {
+            if (isAjax) return res.status(401).json({ error: 'Incorrect answer' })
+            return res.redirect('/auth/recovery_account?error=incorrect_answer')
+        }
 
         // set short-lived session state for password reset (15 minutes)
         req.session.passwordReset = {
             username: user.name,
-            expiresAt: Date.now() + (15 * 60 * 1000)
+            expiresAt: Date.now() + PENDING_REG_TTL_MS
         }
 
-        return res.status(200).json({ verified: true })
+        // ensure session is persisted to the store before responding (avoids race with next request)
+        try {
+            await new Promise((resolve, reject) => {
+                req.session.save(err => { if (err) return reject(err); resolve() })
+                console.log('DEBUG verify: session saved', { sessionID: req.sessionID, passwordReset: req.session.passwordReset })
+            })
+        } catch (saveErr) {
+            // fallback: return an error for AJAX or redirect with error for non-AJAX
+            if (isAjax) return res.status(500).json({ error: 'Failed to persist session' })
+            return res.redirect('/auth/recovery_account?error=session_save_failed')
+        }
+
+        // respond appropriately for AJAX vs regular form submit
+        if (isAjax) {
+            return res.status(200).json({ verified: true })
+        } else {
+            // redirect back to the recovery page; client will detect ?verified=1 and show reset UI
+            return res.redirect('/auth/recovery_account?verified=1')
+        }
     } catch (err) {
-        return res.status(500).json({ error: err.message })
+        // prefer JSON error for XHR, otherwise redirect to generic error
+        const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
+        if (isAjax) return res.status(500).json({ error: err.message })
+        return res.redirect('/auth/recovery_account?error=server')
     }
 })
 
 // reset password (requires prior verification in same session)
 router.post('/recovery_account/reset', async (req, res) => {
+    console.log('DEBUG reset: incoming', { sessionID: req.sessionID, sessionPasswordReset: req.session && req.session.passwordReset, cookies: req.headers.cookie })
     try {
+        const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
+
         const sessionToken = req.session.passwordReset
-        if (!sessionToken || !sessionToken.username || sessionToken.expiresAt < Date.now()) {
+        if (!sessionToken || !isString(sessionToken.username) || !sessionToken.expiresAt || sessionToken.expiresAt < Date.now()) {
             req.session.passwordReset = null
-            return res.status(403).json({ error: 'Verification required or expired' })
+            if (isAjax) return res.status(403).json({ error: 'Verification required or expired' })
+            return res.redirect('/auth/recovery_account?error=verification_required')
         }
 
         const { new_password, confirm_password } = req.body
-        if (!new_password || !confirm_password) {
-            return res.status(400).json({ error: 'Missing password fields' })
+        if (!isValidPassword(new_password) || !isValidPassword(confirm_password)) {
+            if (isAjax) return res.status(400).json({ error: 'Missing or invalid password fields' })
+            return res.redirect('/auth/recovery_account?error=invalid_password')
         }
         if (new_password !== confirm_password) {
-            return res.status(400).json({ error: 'Passwords do not match' })
+            if (isAjax) return res.status(400).json({ error: 'Passwords do not match' })
+            return res.redirect('/auth/recovery_account?error=password_mismatch')
         }
 
-        const lengthOk = new_password.length >= 8
         const numberOk = /[0-9]/.test(new_password)
         const specialOk = /[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(new_password)
-        if (!lengthOk || !numberOk || !specialOk) {
-            return res.status(400).json({ error: 'Password must be at least 8 characters and include a number and a special character.' })
+        if (!numberOk || !specialOk) {
+            if (isAjax) return res.status(400).json({ error: 'Password must include a number and a special character.' })
+            return res.redirect('/auth/recovery_account?error=weak_password')
         }
 
         const user = await query.getProfile({ name: sessionToken.username })
         if (!user) {
             req.session.passwordReset = null
-            return res.status(404).json({ error: 'User not found' })
+            if (isAjax) return res.status(404).json({ error: 'User not found' })
+            return res.redirect('/auth/recovery_account?error=notfound')
         }
 
-        // Disallow reuse of current or any previous passwords:
-        // compare plaintext new_password against stored bcrypt hashes
+        // Disallow reuse ...
         const allHashes = []
         if (user.password) allHashes.push(user.password)
         if (Array.isArray(user.previousPasswords) && user.previousPasswords.length) {
@@ -366,19 +468,16 @@ router.post('/recovery_account/reset', async (req, res) => {
         }
 
         for (const oldHash of allHashes) {
-            // skip falsy entries
             if (!oldHash) continue
-            // bcrypt.compare returns true when new_password matches an old hash
-            // normalize nothing here — registration stored recovery answer normalized only
             const same = await bcrypt.compare(new_password, oldHash)
             if (same) {
-                return res.status(400).json({ error: 'New password must not match any current or previous passwords.' })
+                if (isAjax) return res.status(400).json({ error: 'New password must not match any current or previous passwords.' })
+                return res.redirect('/auth/recovery_account?error=password_reused')
             }
         }
 
         const newHash = await bcrypt.hash(new_password, 10)
 
-        // Build update using $set and $push (push current password into previousPasswords)
         const updateOps = {
             $set: {
                 password: newHash,
@@ -387,7 +486,6 @@ router.post('/recovery_account/reset', async (req, res) => {
         }
 
         if (user.password) {
-            // keep only the most recent N previous passwords (example: 10)
             updateOps.$push = {
                 previousPasswords: {
                     $each: [user.password],
@@ -410,19 +508,29 @@ router.post('/recovery_account/reset', async (req, res) => {
         // log the user in after password reset
         req.login(freshUser, (err) => {
             if (err) {
-                // still respond success but indicate login failed
-                return res.status(200).json({ success: true, redirect: '/', login: false, message: 'Password changed but login failed. Please log in manually.' })
+                if (isAjax) {
+                    return res.status(200).json({ success: true, redirect: '/', login: false, message: 'Password changed but login failed. Please log in manually.' })
+                }
+                // non-AJAX: redirect to home with a notice query (client may show it)
+                return res.redirect('/?msg=' + encodeURIComponent('Password changed; please log in.'))
             }
-            // successful login -> respond with redirect
-            return res.status(200).json({ success: true, redirect: '/' })
+            if (isAjax) {
+                return res.status(200).json({ success: true, redirect: '/' })
+            }
+            return res.redirect('/')
         })
     } catch (err) {
-        return res.status(500).json({ error: err.message })
+        if (req.xhr) return res.status(500).json({ error: err.message })
+        return res.redirect('/auth/recovery_account?error=server')
     }
 })
 
 router.post('/nametaken', async (req, res) => {
-    const results = await query.getProfile({ name: req.body.username })
+    const username = req.body.username
+    if (!isValidUsername(username)) {
+        return res.status(400).send("Invalid username.")
+    }
+    const results = await query.getProfile({ name: username.trim() })
 
     if (results) {
         res.status(409).send("Username Taken.")

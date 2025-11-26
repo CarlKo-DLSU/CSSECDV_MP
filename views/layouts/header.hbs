@@ -11,24 +11,24 @@
 <body>
     <div id="lor-container" class="popup">
         <div id="lor-popup">
-            <span id="lor-popup-close" class="icon icon-md popup-x-i hov2"></span>
+            <span id="lor-popup-close" class="icon icon-md popup-x-i hov2" role="button" aria-label="Close login popup"></span>
             <div id="lor-login-box">
                 <h2 id="lor-login-title">Login</h2>
-                <form id="lor-login-form" class="lor-form" method="POST" action="/auth/login">
-                    <label class="lor-label" for="lor-login-username">Username <p id="lor-log-alr" class="lor-err"></p>
+                <form id="lor-login-form" class="lor-form" method="POST" action="/auth/login" novalidate>
+                    <label class="lor-label" for="lor-login-username">Username <p id="lor-log-alr" class="lor-err" aria-live="polite"></p>
                         <input placeholder="..." id="lor-login-username" name="username" class="lor-login-input"
-                            type="text">
+                            type="text" autocomplete="username" maxlength="30" required>
                     </label>
-                    <label class="lor-label" for="lor-login-password">Password <p id="lor-log-confirm" class="lor-err">
+                    <label class="lor-label" for="lor-login-password">Password <p id="lor-log-confirm" class="lor-err" aria-live="polite">
                         </p>
                         <input placeholder="..." id="lor-login-password" name="password" class="lor-login-input"
-                            type="password">
+                            type="password" autocomplete="current-password" maxlength="128" required>
                     </label>
                     <label id="lor-remember-me-label" class="lor-label" for="lor-remember-me">Remember Me
-                        <input id="lor-remember-me" type="checkbox" name="rememberMe" value="yes">
+                        <input id="lor-remember-me" type="checkbox" name="rememberMe" value="yes" aria-label="Remember me">
                     </label>
                     <input type="submit" value="LOGIN" class="popup-button hov1">
-                    <a id="lor-forgot-password" href="/auth/recovery_account" class="popup-button link" style="margin-top:8px; display:block; text-align:center;">Forgot password?</a>
+                    <a id="lor-forgot-password" href="/auth/recovery_account" class="popup-button link" style="margin-top:8px; display:block; text-align:center;" rel="noopener noreferrer">Forgot password?</a>
                 </form>
             </div>
             <div id="lor-or-box">
@@ -37,21 +37,21 @@
             <div id="lor-register-box">
                 <p id="lor-register-prompt">Don't have an account?</p>
                 <h2 id="lor-register-title">Register</h2>
-                <p id="lor-register-pw-info style="text-align: right">Password must be at least 8 characters long, have a number and a special character</p>
-                <form id="lor-register-form" class="lor-form" method="POST" action="/auth/register">
-                    <label class="lor-label" for="lor-register-username">Username <p id="lor-reg-alr" class="lor-err">
+                <p id="lor-register-pw-info" style="text-align: right">Password must be at least 8 characters long, have a number and a special character</p>
+                <form id="lor-register-form" class="lor-form" method="POST" action="/auth/register" novalidate>
+                    <label class="lor-label" for="lor-register-username">Username <p id="lor-reg-alr" class="lor-err" aria-live="polite">
                         </p>
                         <input placeholder="..." id="lor-register-username" name="username" class="lor-register-input"
-                            type="text">
+                            type="text" autocomplete="username" maxlength="30" required>
                     </label>
-                    <label class="lor-label" for="lor-register-password">Password <p id="lor-reg-con" class="lor-err">
+                    <label class="lor-label" for="lor-register-password">Password <p id="lor-reg-con" class="lor-err" aria-live="polite">
                         </p>
                         <input placeholder="..." id="lor-register-password" name="password" class="lor-register-input"
-                            type="password">
+                            type="password" autocomplete="new-password" maxlength="128" required>
                     </label>
                     <label class="lor-label" for="lor-register-confirm-password">Confirm Password
                         <input placeholder="..." id="lor-register-confirm-password" name="confirm_password"
-                            class="lor-register-input" type="password">
+                            class="lor-register-input" type="password" autocomplete="new-password" maxlength="128" required>
                     </label>
                     <input type="submit" value="REGISTER" class="popup-button hov1">
                 </form>
@@ -62,7 +62,7 @@
         <div id="header">
             <div class="header-item">
                 <a href="/">
-                    <img id="logo" src="/imgs/logo.png">
+                    <img id="logo" src="/imgs/logo.png" alt="Restaurant Reviews logo">
                 </a>
                 {{#if currentUser}}
                     <div id="lor-last-activity">Last activity: {{formatLastActivity currentUser.lastLoginAttempt currentUser.lastSuccessfulLogin}}</div>
@@ -71,8 +71,8 @@
             <div class="header-item">
                 <div id="header-search-div">
                     <form id="header-search-bar-form">
-                        <input id="sf-filter" type="text" name="filter" placeholder="Filter results!">
-                        <span class="icon icon-md search-i"></span>
+                        <input id="sf-filter" type="text" name="filter" placeholder="Filter results!" maxlength="200" autocomplete="off">
+                        <span class="icon icon-md search-i" aria-hidden="true"></span>
                     </form>
                 </div>
             </div>
@@ -81,10 +81,10 @@
                 {{#if currentUser}}
                 <a id="lor-logout" href="/auth/logout" class="thov3">LOG OUT</a>
                 <a id="lor-user-avatar-link" href="/profile/id/{{ currentUser.name }}">
-                    <img id="lor-user-avatar" src="/imgs/avatars/{{ currentUser.avatar }}">
+                    <img id="lor-user-avatar" src="/imgs/avatars/{{ currentUser.avatar }}" alt="User avatar">
                 </a>
                 {{else}}
-                <a id="lor-popup-open" class="thov3">LOGIN</a>
+                <a id="lor-popup-open" class="thov3" role="button" aria-haspopup="dialog">LOGIN</a>
                 {{/if}}
             </div>
         </div>

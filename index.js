@@ -8,12 +8,30 @@ const express = require("express")
 const hbs = require("hbs")
 const query = require("./utility/query")
 const error = require("./utility/error")
+const helmet = require("helmet")
+const compression = require("compression")
 
 // express settings
 const app = new express()
 app.use(express.json()) // use json
-app.use(express.urlencoded({ extended: true })); // files consist of more than strings
-app.use(express.static('public')) // we'll add a static directory named "public"
+app.use(express.urlencoded({ extended: true })); // parse urlencoded
+app.use(express.static('public')) // static directory
+
+// security middleware
+app.disable('x-powered-by')
+app.use(helmet())
+app.use(compression())
+
+// require essential env vars early
+if (!process.env.SESSION_SECRET || !process.env.MONGO_URL || !process.env.PORT) {
+    console.error('Missing required env variables: SESSION_SECRET, MONGO_URL, or PORT')
+    process.exit(1)
+}
+
+// when behind a proxy (e.g. production), trust first proxy so secure cookies work
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1)
+}
 
 // global data
 app.locals.currentUser = null
@@ -24,16 +42,13 @@ app.set('views', __dirname + "/views")
 app.set('view engine', 'hbs')
 app.set('view options', { layout: '/layouts/header' });
 
-// Handlebars helper to conditionally render blocks by role
-// Usage in templates: {{#hasRole currentUser 'admin'}} ... {{/hasRole}}
+// Handlebars helpers
 hbs.registerHelper('hasRole', function(user, role, options) {
     try {
         if (user && user.role && user.role === role) {
             return options.fn(this);
         }
-    } catch (e) {
-        // ignore
-    }
+    } catch (e) {}
     return options.inverse(this);
 });
 
@@ -42,21 +57,32 @@ const MongoStore = require('connect-mongo');
 const passport = require('passport')
 const initPassport = require("./utility/passport_config")
 
+// session config hardening
+const SESSION_MAX_AGE = parseInt(process.env.SESSION_MAX_AGE, 10) || (14 * 24 * 60 * 60 * 1000) // 14 days
+const SESSION_NAME = process.env.SESSION_NAME || 'restaurantReviewsSession'
+
 app.use(session({
+    name: SESSION_NAME,
     secret: process.env.SESSION_SECRET,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URL
+        mongoUrl: process.env.MONGO_URL,
+        ttl: Math.floor(SESSION_MAX_AGE / 1000),
+        autoRemove: 'native'
     }),
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,
-        maxAge: false 
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: SESSION_MAX_AGE
     }
 }))
 
-app.use(passport.session())
+// passport initialization (ensure strategies are configured before session use)
 initPassport(passport)
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.use((req, res, next) => {
     res.locals.currentUser = req.user || null;
@@ -102,7 +128,14 @@ app.use("/auth", authRouter)
 app.use("/edit", editRouter)
 app.use("/changepass", changePassRouter)
 
-// listen! :3
+// basic error handler (keeps response minimal)
+app.use((err, req, res, next) => {
+    console.error(err)
+    if (res.headersSent) return next(err)
+    res.status(500).render('error', { errorMsg: 'Internal Server Error' })
+})
+
+// listen
 const server = app.listen(process.env.PORT, function() {
     console.log('SERVER IS UP!');
-});
+})
