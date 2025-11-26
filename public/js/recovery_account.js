@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     (function(){
         // client-side constraints (mirror server)
         const USERNAME_MAX = 30
-        const ANSWER_MAX = 200
+        const ANSWER_MAX = 50
         const PASSWORD_MIN = 8
         const PASSWORD_MAX = 128
         const FORBIDDEN_RE = /[\0\r\n\t\$]/ // disallow control chars and dollar sign

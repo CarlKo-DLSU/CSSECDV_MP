@@ -23,7 +23,7 @@ const errorIcon = "-60px -80px";
 const USERNAME_MAX = 30
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 128
-const FORBIDDEN_RE = /[\0\r\n\t\$]/ // disallow control chars and dollar sign
+const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$]/
 
 // apply maxlength attributes if inputs exist
 if (regUsername) regUsername.setAttribute('maxlength', USERNAME_MAX)
@@ -58,7 +58,8 @@ if (regUsername) {
             regAlr.textContent = ""
             return
         }
-        if (username.length > USERNAME_MAX || FORBIDDEN_RE.test(username)) {
+        // reject raw input that contains forbidden chars or has leading/trailing whitespace
+        if (FORBIDDEN_RE.test(raw) || raw !== raw.trim() || username.length > USERNAME_MAX) {
             regAlr.textContent = "❌ Invalid username."
             return
         }
@@ -69,6 +70,7 @@ if (regUsername) {
                 const controller = new AbortController()
                 const t = setTimeout(() => controller.abort(), 8000)
 
+                // send trimmed username for availability check (only after raw passes validation)
                 const res = await fetch('/auth/nametaken', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=UTF-8', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -110,9 +112,9 @@ function resetLog() {
 
 function isValidUsernameClient(u) {
     if (!u || typeof u !== 'string') return false
+    if (FORBIDDEN_RE.test(u)) return false
     const s = u.trim()
     if (s.length === 0 || s.length > USERNAME_MAX) return false
-    if (FORBIDDEN_RE.test(s)) return false
     return true
 }
 
@@ -126,8 +128,10 @@ function isValidPasswordClient(p) {
 function regValidateContent(e) {
     // ensure we check password rules first so message is set
     const pwdOk = validateRegPassword()
-    const usernameVal = regUsername ? regUsername.value.trim() : ''
-    const usernamesEmpty = !isValidUsernameClient(usernameVal)
+    const usernameRaw = regUsername ? String(regUsername.value || '') : ''
+    const usernameVal = usernameRaw.trim()
+    // validate against the raw value so control chars anywhere are detected
+    const usernamesEmpty = !isValidUsernameClient(usernameRaw)
     const passwordsEmpty = !regPassword || regPassword.value.trim() == ""
     const notMatch = regPassword && regConPassword && regPassword.value.trim() !== regConPassword.value.trim()
     const nameTaken = regAlr && regAlr.textContent !== ""
@@ -154,7 +158,7 @@ function regValidateContent(e) {
     e.preventDefault()
 
     const payload = {
-        username: usernameVal,
+        username: usernameRaw,
         password: regPassword.value,
         confirm_password: regConPassword.value,
         rememberMe: false

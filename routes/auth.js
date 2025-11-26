@@ -28,18 +28,14 @@ const allowedQuestions = [
 
 function isString(v) { return typeof v === 'string' }
 function containsMongoOperator(v) {
-    // rejects strings beginning with $ or containing {"$"} style payloads
     if (!isString(v)) return true
-    return v.indexOf('$') !== -1
+    return /[\x00-\x1F\x7F\$]/.test(v)
 }
 function isValidUsername(u) {
     if (!isString(u)) return false
+    if (/[\x00-\x1F\x7F\\\$]/.test(u)) return false
     const s = u.trim()
     if (s.length < USERNAME_MIN || s.length > USERNAME_MAX) return false
-    // disallow control chars and null byte
-    if (/[\0\r\n\t]/.test(s)) return false
-    // disallow $ to avoid operator confusion; allow most visible chars otherwise
-    if (s.includes('$')) return false
     return true
 }
 function isValidPassword(p) {
@@ -54,7 +50,14 @@ function isValidAnswer(a) {
     if (s.includes('$')) return false
     return true
 }
-
+function containsRawInvalidChars(raw) {
+    if (!isString(raw)) return true
+    // any ASCII control (0x00-0x1F), DEL (0x7F) or dollar sign
+    if (/[\x00-\x1F\x7F\\\$]/.test(raw)) return true
+    // reject if raw has leading/trailing whitespace (including newline/tab)
+    if (raw !== raw.trim()) return true
+    return false
+}
 async function recordFailedAttempt(username) {
     const la = await LoginAttempt.findOneAndUpdate(
         { username },
@@ -78,6 +81,12 @@ router.post('/register', async (req, res, next) => {
     try {
         const { username, password, confirm_password } = req.body
         const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
+
+        if (containsRawInvalidChars(username) || !isValidUsername(username)) {
+            const msg = 'Invalid username.'
+            if (isAjax) return res.status(400).json({ error: msg })
+            return res.redirect()
+        }
 
         if (!isValidUsername(username)) {
             const msg = 'Invalid username.'
@@ -276,6 +285,10 @@ router.post('/validatecredentials', async (req, res) => {
     const username = req.body.username
     const password = req.body.password
 
+    if (containsRawInvalidChars(username) || !isString(password)) {
+        return res.status(400).send("Bad Credentials")
+    }
+
     if (!isValidUsername(username) || !isString(password)) {
         return res.status(400).send("Bad Credentials")
     }
@@ -425,7 +438,6 @@ router.post('/recovery_account/verify', async (req, res) => {
 
 // reset password (requires prior verification in same session)
 router.post('/recovery_account/reset', async (req, res) => {
-    console.log('DEBUG reset: incoming', { sessionID: req.sessionID, sessionPasswordReset: req.session && req.session.passwordReset, cookies: req.headers.cookie })
     try {
         const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
 
@@ -527,7 +539,8 @@ router.post('/recovery_account/reset', async (req, res) => {
 
 router.post('/nametaken', async (req, res) => {
     const username = req.body.username
-    if (!isValidUsername(username)) {
+    // reject raw invalid input immediately
+    if (containsRawInvalidChars(username) || !isValidUsername(username)) {
         return res.status(400).send("Invalid username.")
     }
     const results = await query.getProfile({ name: username.trim() })
