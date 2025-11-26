@@ -32,33 +32,38 @@ if (cpForm) {
         e.preventDefault()
         showMsg('')
 
-        const current = (document.getElementById('current_password') && document.getElementById('current_password').value) || ''
-        const np = (document.getElementById('new_password') && document.getElementById('new_password').value) || ''
-        const cp = (document.getElementById('confirm_password') && document.getElementById('confirm_password').value) || ''
+        // robustly find inputs by id or name (handles template id/name mismatches)
+        const curEl = document.getElementById('current_password') || cpForm.querySelector('input[name="current_password"]')
+        const newEl = document.getElementById('new_password') || cpForm.querySelector('input[name="new_password"]')
+        const confEl = document.getElementById('confirm_password') || cpForm.querySelector('input[name="confirm_password"]')
+
+        const current = (curEl && curEl.value) || ''
+        const np = (newEl && newEl.value) || ''
+        const cp = (confEl && confEl.value) || ''
 
         if (!current || !np || !cp) {
             showMsg('Please fill all fields.')
             return
         }
         if (np.length < PASSWORD_MIN || np.length > PASSWORD_MAX) {
-            showMsg(`Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters.`)
+            showMsg(`❌ Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters.`)
             return
         }
         // block forbidden characters in passwords
         if (FORBIDDEN_RE.test(np) || FORBIDDEN_RE.test(current) || FORBIDDEN_RE.test(cp)) {
-            showMsg('Password contains invalid characters.')
+            showMsg('❌ Password contains invalid characters.')
             return
         }
         if (np !== cp) {
-            showMsg('New passwords do not match.')
+            showMsg('❌ New passwords do not match.')
             return
         }
         if (!/[0-9]/.test(np) || !/[!@#$%^&*(),.?":{}|<>_\-\\\[\];'`~+=\/;]/.test(np)) {
-            showMsg('Password must include a number and a special character.')
+            showMsg('❌ Password must include a number and a special character.')
             return
         }
 
-        const payload = { current_password: current, new_password: nw, confirm_password: conf }
+        const payload = { current_password: current, new_password: np, confirm_password: cp }
 
         // use fetch with timeout and explicit headers
         const controller = new AbortController()
@@ -79,9 +84,9 @@ if (cpForm) {
 
             if (res.ok) {
                 showMsg('✅ Password changed successfully.', true)
-                cpForm.querySelector('input[name="current_password"]').value = ''
-                cpForm.querySelector('input[name="new_password"]').value = ''
-                cpForm.querySelector('input[name="confirm_password"]').value = ''
+                if (curEl) curEl.value = ''
+                if (newEl) newEl.value = ''
+                if (confEl) confEl.value = ''
                 return
             }
 
