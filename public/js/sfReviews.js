@@ -1,9 +1,9 @@
 const searchParams = new URLSearchParams(window.location.search);
 const ascLabel = "sort-asc-i"
 const hasorLabel = "sort-or-i"
-const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
 
 document.addEventListener('DOMContentLoaded', function() {
+    const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
     const sort = document.getElementById('sf-sort')
     const min = document.getElementById('sf-min')
     const max = document.getElementById('sf-max')
@@ -31,28 +31,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     for (const [key, val] of searchParams.entries()) {
         if (key === "order") {
-            if (val === "asc") {
-                orderLabel.classList.add(ascLabel)
-                order.checked = true
-            } else if (val === "desc") {
-                orderLabel.classList.remove(ascLabel)
-                order.checked = false
+            if (orderLabel && order) {
+                if (val === "asc") {
+                    orderLabel.classList.add(ascLabel)
+                    order.checked = true
+                } else if (val === "desc") {
+                    orderLabel.classList.remove(ascLabel)
+                    order.checked = false
+                }
             }
             continue
         }
 
         if (key === "or") {
-            if (val === "or") {
-                orLabel.classList.add(hasorLabel)
-                or.checked = true
-            } else if (val === "noor") {
-                orderLabel.classList.remove(hasorLabel)
-                or.checked = false
+            if (orLabel && or) {
+                if (val === "or") {
+                    orLabel.classList.add(hasorLabel)
+                    or.checked = true
+                } else if (val === "noor") {
+                    orLabel.classList.remove(hasorLabel)
+                    or.checked = false
+                }
             }
             continue
         }
 
-        document.getElementById("sf-" + key).value = val
+        const el = document.getElementById("sf-" + key)
+        if (el) el.value = val
     }
 
     // live validation: show error when invalid, clear when valid
@@ -65,14 +70,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     })
 
-    page.addEventListener("change", somethingChanged)
-    sort.addEventListener("change", somethingChanged)
-    min.addEventListener("change", somethingChanged)
-    max.addEventListener("change", somethingChanged)
-    order.addEventListener("change", somethingChanged)
-    or.addEventListener("change", somethingChanged)
+    // attach handlers only if elements exist
+    page && page.addEventListener("change", somethingChanged)
+    sort && sort.addEventListener("change", somethingChanged)
+    min && min.addEventListener("change", somethingChanged)
+    max && max.addEventListener("change", somethingChanged)
+    order && order.addEventListener("change", somethingChanged)
+    or && or.addEventListener("change", somethingChanged)
 
-    filterForm.addEventListener("submit", (e) => {
+    filterForm && filterForm.addEventListener("submit", (e) => {
         e.preventDefault()
         if (!isFilterValid()) {
             filter && filter.focus()
@@ -88,6 +94,15 @@ document.addEventListener('DOMContentLoaded', function() {
             return
         }
         const path = window.location.origin + window.location.pathname
-        window.location.href = `${path}?sort=${sort.value}&order=${order.checked ? "asc" : "desc"}&min=${min.value}&max=${max.value}&page=${page.value}&or=${or.checked ? "or" : "noor"}&filter=${encodeURIComponent(filter.value)}`
+        const q = [
+            `sort=${encodeURIComponent(sort ? sort.value : '')}`,
+            `order=${(order && order.checked) ? 'asc' : 'desc'}`,
+            `min=${encodeURIComponent(min ? min.value : '')}`,
+            `max=${encodeURIComponent(max ? max.value : '')}`,
+            `page=${encodeURIComponent(page ? page.value : '')}`,
+            `or=${(or && or.checked) ? 'or' : 'noor'}`,
+            `filter=${encodeURIComponent(filter ? filter.value : '')}`
+        ].join('&')
+        window.location.href = `${path}?${q}`
     }
 })

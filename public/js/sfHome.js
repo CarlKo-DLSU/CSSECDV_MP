@@ -1,9 +1,9 @@
 const searchParams = new URLSearchParams(window.location.search);
 const descLabel = "sort-desc-i"
 const ascLabel = "sort-asc-i"
-const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
 
 document.addEventListener('DOMContentLoaded', function() {
+    const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
     const sort = document.getElementById('sf-sort')
     const min = document.getElementById('sf-min')
     const max = document.getElementById('sf-max')
@@ -30,17 +30,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     for (const [key, val] of searchParams.entries()) {
         if (key === "order") {
-            if (val === "asc") {
-                orderLabel.classList.add(ascLabel)
-                order.checked = true
-            } else if (val === "desc") {
-                orderLabel.classList.remove(ascLabel)
-                order.checked = false
+            if (orderLabel && order) {
+                if (val === "asc") {
+                    orderLabel.classList.add(ascLabel)
+                    order.checked = true
+                } else if (val === "desc") {
+                    orderLabel.classList.remove(ascLabel)
+                    order.checked = false
+                }
             }
             continue
         }
 
-        document.getElementById("sf-" + key).value = val
+        const el = document.getElementById("sf-" + key)
+        if (el) el.value = val
     }
 
     // live validation: show error when invalid, clear when valid
@@ -53,13 +56,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     })
 
-    filter.addEventListener("change", somethingChanged)
-    sort.addEventListener("change", somethingChanged)
-    min.addEventListener("change", somethingChanged)
-    max.addEventListener("change", somethingChanged)
-    order.addEventListener("change", somethingChanged)
+    // attach listeners only when elements exist
+    filter && filter.addEventListener("change", somethingChanged)
+    sort && sort.addEventListener("change", somethingChanged)
+    min && min.addEventListener("change", somethingChanged)
+    max && max.addEventListener("change", somethingChanged)
+    order && order.addEventListener("change", somethingChanged)
 
-    filterForm.addEventListener("submit", (e) => {
+    filterForm && filterForm.addEventListener("submit", (e) => {
         e.preventDefault()
         // validate before processing
         if (!isFilterValid()) {
@@ -77,13 +81,13 @@ document.addEventListener('DOMContentLoaded', function() {
             filter && filter.focus()
             return
         }
-        // use current pathname (like sfReviews.js does) and encode params
+        // use current pathname and encode params; guard missing inputs
         const path = window.location.origin + window.location.pathname
         const vals = {
-            sort: encodeURIComponent(sort.value || ""),
-            order: order.checked ? "asc" : "desc",
-            min: encodeURIComponent(min.value || ""),
-            max: encodeURIComponent(max.value || ""),
+            sort: encodeURIComponent(sort ? sort.value : ""),
+            order: (order && order.checked) ? "asc" : "desc",
+            min: encodeURIComponent(min ? min.value : ""),
+            max: encodeURIComponent(max ? max.value : ""),
             filter: encodeURIComponent((filter && filter.value) ? filter.value : "")
         }
         console.log("sfHome -> navigating with:", vals)
