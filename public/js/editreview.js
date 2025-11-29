@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('edit-form')
     const rating = document.getElementById('cr-star-input')
 
+    const TITLE_MAX = 100
+    const BODY_MAX = 300
+
     const no = document.getElementById('delete-no')
     const deletePopup = document.getElementById('delete-popup')
 
@@ -16,6 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const label = document.getElementById("cr-upload-text")
     const icon = document.getElementsByClassName("cr-img-i")[0]
     const oldImages = label ? parseInt(label.getAttribute("data-oldImages") || "0", 10) : 0
+
+    if (title) title.setAttribute('maxlength', String(TITLE_MAX))
+    if (content) content.setAttribute('maxlength', String(BODY_MAX))
 
     const revId = form ? form.getAttribute("data-id") : null
 
@@ -83,6 +89,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 title.classList.add('required-error')
                 showEditError('❌ Invalid characters detected in input field/s.')
                 if (saveInput) saveInput.disabled = true
+            } if (raw.length > TITLE_MAX) {
+                title.classList.add('required-error')
+                showEditError(`❌ Title exceeds ${TITLE_MAX} characters (${raw.length}/${TITLE_MAX}).`)
+                if (saveInput) saveInput.disabled = true
+                return
             } else {
                 title.classList.remove('required-error')
                 clearEditError()
@@ -98,6 +109,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 content.classList.add('required-error')
                 showEditError('❌ Invalid characters detected in input field/s.')
                 if (saveInput) saveInput.disabled = true
+            } if (raw.length > BODY_MAX) {
+                content.classList.add('required-error')
+                showEditError(`❌ Content exceeds ${BODY_MAX} characters (${raw.length}/${BODY_MAX}).`)
+                if (saveInput) saveInput.disabled = true
+                return
             } else {
                 content.classList.remove('required-error')
                 clearEditError()
@@ -113,6 +129,19 @@ document.addEventListener('DOMContentLoaded', function () {
             showEditError('❌ Submission blocked: invalid characters detected.')
             if (title && EDIT_REVIEW_FORBIDDEN_RE.test(String(title.value || ''))) title.classList.add('required-error')
             if (content && EDIT_REVIEW_FORBIDDEN_RE.test(String(content.value || ''))) content.classList.add('required-error')
+            if (saveInput) saveInput.disabled = true
+            return
+        }
+
+        if ((title && title.value && title.value.length > TITLE_MAX) ||
+            (content && content.value && content.value.length > BODY_MAX)) {
+            if (title && title.value.length > TITLE_MAX) {
+                title.classList.add('required-error')
+                showEditError(`❌ Title exceeds ${TITLE_MAX} characters (${title.value.length}/${TITLE_MAX}).`)
+            } else if (content && content.value.length > BODY_MAX) {
+                content.classList.add('required-error')
+                showEditError(`❌ Content exceeds ${BODY_MAX} characters (${content.value.length}/${BODY_MAX}).`)
+            }
             if (saveInput) saveInput.disabled = true
             return
         }

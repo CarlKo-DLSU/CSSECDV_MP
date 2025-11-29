@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const body = document.getElementById('cr-content')
     const button = document.getElementById('cr-post')
 
+    const TITLE_MAX = 100
+    const BODY_MAX = 300
+
     const file = document.getElementById("cr-file")
     const label = document.getElementById("cr-upload-text")
     const icon = document.getElementsByClassName("cr-img-i")[0]
@@ -11,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const orForm = document.getElementById('or-form')
     const orBody = document.getElementById('or-content')
     const orButton = document.getElementById('or-post')
+
+    if (title) title.setAttribute('maxlength', String(TITLE_MAX))
+    if (body) body.setAttribute('maxlength', String(BODY_MAX))
 
     // add forbidden-regex (file-unique) and inline error helper
     const REVIEW_FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
@@ -61,6 +67,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 title.classList.add('required-error')
                 showReviewError('❌ Invalid characters detected in input field/s.')
                 if (button) button.disabled = true
+                return
+            }
+            if (raw.length > TITLE_MAX) {
+                title.classList.add('required-error')
+                showReviewError(`❌ Title exceeds ${TITLE_MAX} characters (${raw.length}/${TITLE_MAX}).`)
+                if (button) button.disabled = true
+                return
             } else {
                 title.classList.remove('required-error')
                 clearReviewError()
@@ -76,6 +89,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 body.classList.add('required-error')
                 showReviewError('❌ Invalid characters detected in input field/s.')
                 if (button) button.disabled = true
+                return
+            }
+            if (raw.length > BODY_MAX) {
+                body.classList.add('required-error')
+                showReviewError(`❌ Content exceeds ${BODY_MAX} characters (${raw.length}/${BODY_MAX}).`)
+                if (button) button.disabled = true
+                return
             } else {
                 body.classList.remove('required-error')
                 clearReviewError()
@@ -107,6 +127,20 @@ document.addEventListener('DOMContentLoaded', function () {
             if (title && REVIEW_FORBIDDEN_RE.test(String(title.value || ''))) title.classList.add('required-error')
             if (body && REVIEW_FORBIDDEN_RE.test(String(body.value || ''))) body.classList.add('required-error')
             showReviewError('❌ Submission blocked: invalid characters detected.')
+            if (button) button.disabled = true
+            return
+        }
+
+        if ((title && title.value && title.value.length > TITLE_MAX) ||
+            (body && body.value && body.value.length > BODY_MAX)) {
+            e.preventDefault()
+            if (title && title.value.length > TITLE_MAX) {
+                title.classList.add('required-error')
+                showReviewError(`❌ Title exceeds ${TITLE_MAX} characters (${title.value.length}/${TITLE_MAX}).`)
+            } else if (body && body.value.length > BODY_MAX) {
+                body.classList.add('required-error')
+                showReviewError(`❌ Content exceeds ${BODY_MAX} characters (${body.value.length}/${BODY_MAX}).`)
+            }
             if (button) button.disabled = true
             return
         }

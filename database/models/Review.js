@@ -24,11 +24,15 @@ const reviewSchema = new mongoose.Schema({
     },
     title: {
         type: String,
-        required: true
+        required: true,
+        maxlength: 100,
+        trim: true
     },
     body: {
         type: String,
-        required: true
+        required: true,
+        maxlength: 300,
+        trim: true
     },
     uploads: {
         type: [String],
