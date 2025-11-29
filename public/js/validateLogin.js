@@ -23,7 +23,8 @@ const errorIcon = "-60px -80px";
 const USERNAME_MAX = 30
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 128
-const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
+// use a file-unique name to avoid global redeclaration collisions with other client scripts
+const LOGIN_FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
 
 // apply maxlength attributes if inputs exist
 if (regUsername) regUsername.setAttribute('maxlength', USERNAME_MAX)
@@ -59,7 +60,7 @@ if (regUsername) {
             return
         }
         // reject raw input that contains forbidden chars or has leading/trailing whitespace
-        if (FORBIDDEN_RE.test(raw) || raw !== raw.trim() || username.length > USERNAME_MAX) {
+        if (LOGIN_FORBIDDEN_RE.test(raw) || raw !== raw.trim() || username.length > USERNAME_MAX) {
             regAlr.textContent = "❌ Invalid username."
             return
         }
@@ -94,8 +95,38 @@ if (regUsername) {
 
 if (regPassword) regPassword.addEventListener("keyup", () => { resetReg(); validateRegPassword(); })
 if (regConPassword) regConPassword.addEventListener("keyup", () => { resetReg(); validateRegPassword(); })
-if (logUsername) logUsername.addEventListener("keyup", resetLog)
-if (logPassword) logPassword.addEventListener("keyup", resetLog)
+
+// proactive validation for login fields: show invalid-char message and disable submit
+if (logUsername) {
+    logUsername.addEventListener('input', () => {
+        const raw = String(logUsername.value || '')
+        const submitBtn = logForm && logForm.querySelector('input[type="submit"]')
+        if (LOGIN_FORBIDDEN_RE.test(raw) || raw !== raw.trim()) {
+            if (logAlr) logAlr.textContent = "❌ Invalid character/s detected."
+            logUsername.classList.add('required-error')
+            if (submitBtn) submitBtn.disabled = true
+        } else {
+            if (logAlr) logAlr.textContent = ""
+            logUsername.classList.remove('required-error')
+            if (submitBtn) submitBtn.disabled = false
+        }
+    })
+}
+if (logPassword) {
+    logPassword.addEventListener('input', () => {
+        const raw = String(logPassword.value || '')
+        const submitBtn = logForm && logForm.querySelector('input[type="submit"]')
+        if (LOGIN_FORBIDDEN_RE.test(raw)) {
+            if (logAlr) logAlr.textContent = "❌ Invalid character/s detected."
+            logPassword.classList.add('required-error')
+            if (submitBtn) submitBtn.disabled = true
+        } else {
+            if (logAlr) logAlr.textContent = ""
+            logPassword.classList.remove('required-error')
+            if (submitBtn) submitBtn.disabled = false
+        }
+    })
+}
 
 function resetReg() {
     if (regUsername) regUsername.classList.remove("required-error")
@@ -112,7 +143,7 @@ function resetLog() {
 
 function isValidUsernameClient(u) {
     if (!u || typeof u !== 'string') return false
-    if (FORBIDDEN_RE.test(u)) return false
+    if (LOGIN_FORBIDDEN_RE.test(u)) return false
     const s = u.trim()
     if (s.length === 0 || s.length > USERNAME_MAX) return false
     return true
@@ -121,7 +152,7 @@ function isValidUsernameClient(u) {
 function isValidPasswordClient(p) {
     if (!p || typeof p !== 'string') return false
     if (p.length < PASSWORD_MIN || p.length > PASSWORD_MAX) return false
-    if (FORBIDDEN_RE.test(p)) return false
+    if (LOGIN_FORBIDDEN_RE.test(p)) return false
     return true
 }
 
@@ -283,7 +314,7 @@ function validateRegPassword() {
     const numberOk = /[0-9]/.test(pwd)
     const specialOk = /[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(pwd)
 
-    if (!lengthOk || !numberOk || !specialOk || FORBIDDEN_RE.test(pwd)) {
+    if (!lengthOk || !numberOk || !specialOk || LOGIN_FORBIDDEN_RE.test(pwd)) {
         if (regCon) regCon.textContent = "❌ Password must be at least 8 characters and include a number and a special character (excluding \\ and \$)"
         if (regPassword) regPassword.classList.add("required-error")
         return false
