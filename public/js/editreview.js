@@ -1,112 +1,177 @@
-const title = document.getElementById('edit-title')
-const content = document.getElementById('edit-content')
-const msg = document.getElementById('edit-msg')
-const cancel = document.getElementById('edit-cancel')
-const save = document.getElementById('edit-save')
-const del = document.getElementById('edit-delete')
-const form = document.getElementById('edit-form')
-const rating = document.getElementById('cr-star-input')
+document.addEventListener('DOMContentLoaded', function () {
+    const title = document.getElementById('edit-title')
+    const content = document.getElementById('edit-content')
+    const msg = document.getElementById('edit-msg')
+    const cancel = document.getElementById('edit-cancel')
+    const saveLabel = document.getElementById('edit-save')        // label
+    const saveInput = document.getElementById('edit-submit')     // actual submit input
+    const del = document.getElementById('edit-delete')
+    const form = document.getElementById('edit-form')
+    const rating = document.getElementById('cr-star-input')
 
-const no = document.getElementById('delete-no')
-const deletePopup = document.getElementById('delete-popup')
+    const no = document.getElementById('delete-no')
+    const deletePopup = document.getElementById('delete-popup')
 
-const file = document.getElementById("cr-file")
-const label = document.getElementById("cr-upload-text")
-const icon = document.getElementsByClassName("cr-img-i")[0]
-const oldImages = label.getAttribute("data-oldImages")
+    const file = document.getElementById("cr-file")
+    const label = document.getElementById("cr-upload-text")
+    const icon = document.getElementsByClassName("cr-img-i")[0]
+    const oldImages = label ? parseInt(label.getAttribute("data-oldImages") || "0", 10) : 0
 
-const revId = form.getAttribute("data-id")
+    const revId = form ? form.getAttribute("data-id") : null
 
-function emptyMsg() {
-    msg.innerHTML = ""
-}
+    const EDIT_REVIEW_FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
+    function showEditError(text) {
+        if (msg) {
+            msg.innerHTML = text
+            msg.style.color = '#c00'
+        } else {
+            // fallback to alert (shouldn't happen)
+            alert(text)
+        }
+    }
+    function clearEditError() {
+        if (msg) msg.innerHTML = ""
+    }
 
-const openDel = (tog, po) => {
-    if (tog && po) {
-        tog.addEventListener("click", () => {
-            po.style.display = (po.style.display == "flex") ? "none" : "flex";
+    function emptyMsg() {
+        if (msg) msg.innerHTML = ""
+    }
 
-            Array.from(po.getElementsByClassName("required-field")).forEach(e => {
-                e.classList.remove("required-error")
-            });
+    const openDel = (tog, po) => {
+        if (tog && po) {
+            tog.addEventListener("click", () => {
+                po.style.display = (po.style.display == "flex") ? "none" : "flex";
+
+                Array.from(po.getElementsByClassName("required-field")).forEach(e => {
+                    e.classList.remove("required-error")
+                });
+            })
+        }
+    }
+
+    openDel(no, deletePopup)
+    openDel(del, deletePopup)
+
+    if (title) {
+        title.addEventListener('focus', () => { if (msg) msg.innerHTML = '' })
+    }
+
+    if (file) {
+        file.addEventListener("change", validateFilesLength);
+        file.addEventListener("click", validateFilesLength);
+    }
+    if (form) {
+        form.addEventListener('submit', validateReviewContent)
+    }
+
+    const deleteForm = document.getElementById('delete-yes')
+    if (deleteForm) {
+        deleteForm.addEventListener("click", (e) => { e.preventDefault(); deleteForm.submit() })
+    }
+
+    if (oldImages > 0 && label) {
+        label.style.color = "var(--col-prim)"
+        label.innerText = oldImages + " IMGS"
+        if (icon) icon.style.backgroundPosition = normalIcon
+    }
+
+    // proactive input validation for edit form
+    if (title) {
+        title.addEventListener('input', () => {
+            const raw = String(title.value || '')
+            if (EDIT_REVIEW_FORBIDDEN_RE.test(raw)) {
+                title.classList.add('required-error')
+                showEditError('❌ Invalid characters detected in input field/s.')
+                if (saveInput) saveInput.disabled = true
+            } else {
+                title.classList.remove('required-error')
+                clearEditError()
+                if (saveInput) saveInput.disabled = false
+            }
         })
     }
-}
 
-openDel(no, deletePopup)
-openDel(del, deletePopup)
-
-title.addEventListener('keyup', emptyMsg)
-
-file.addEventListener("change", validateFilesLength);
-file.addEventListener("click", validateFilesLength);
-form.addEventListener('submit', validateReviewContent)
-
-cancel.addEventListener('click', ev => {
-    file.setAttribute("data-changed", "false")
-})
-
-const deleteForm = document.getElementById('delete-yes')
-deleteForm.addEventListener("click", (e) => { deleteForm.submit() })
-
-if (oldImages > 0) {
-    label.style.color = "var(--col-prim)"
-    label.innerText = oldImages + " IMGS"
-    icon.style.backgroundPosition = normalIcon
-}
-
-function validateReviewContent(e) {
-    e.preventDefault()
-    if (file.files.length > 4) {
-        return
+    if (content) {
+        content.addEventListener('input', () => {
+            const raw = String(content.value || '')
+            if (EDIT_REVIEW_FORBIDDEN_RE.test(raw)) {
+                content.classList.add('required-error')
+                showEditError('❌ Invalid characters detected in input field/s.')
+                if (saveInput) saveInput.disabled = true
+            } else {
+                content.classList.remove('required-error')
+                clearEditError()
+                if (saveInput) saveInput.disabled = false
+            }
+        })
     }
 
-    if (title.value == "") {
-        title.classList.add("required-error")
-    } else {
-        title.classList.remove("required-error")
-        submitForm()
-    }
-}
-
-function validateFilesLength() {
-    const numImages = file.files.length
-    label.innerText = numImages + " IMGS"
-
-    if (numImages == 0) {
-        label.style.color = "white"
-        icon.style.backgroundPosition = normalIcon
-    } else if (numImages < 5) {
-        label.style.color = "var(--col-prim)"
-        icon.style.backgroundPosition = normalIcon
-    } else {
-        label.style.color = "var(--col-error)"
-        icon.style.backgroundPosition = errorIcon
-        label.innerText = "MAX 4 IMGS"
-    }
-
-    file.setAttribute("data-changed", "true")
-}
-
-function submitForm() {
-    const data = new FormData(form)
-    data.append("id", revId)
-    data.append("imagesChanged", file.getAttribute("data-changed"))
-
-    let xhttp = new XMLHttpRequest()
-    xhttp.open("POST", `/edit/review`, true)
-
-    xhttp.onreadystatechange = () => {
-        if (xhttp.readyState != 4) {
+    function validateReviewContent(e) {
+        e.preventDefault()
+        // block submission if invalid chars present
+        if (EDIT_REVIEW_FORBIDDEN_RE.test(String(title ? title.value : '')) || EDIT_REVIEW_FORBIDDEN_RE.test(String(content ? content.value : ''))) {
+            showEditError('❌ Submission blocked: invalid characters detected.')
+            if (title && EDIT_REVIEW_FORBIDDEN_RE.test(String(title.value || ''))) title.classList.add('required-error')
+            if (content && EDIT_REVIEW_FORBIDDEN_RE.test(String(content.value || ''))) content.classList.add('required-error')
+            if (saveInput) saveInput.disabled = true
             return
         }
 
-        if (xhttp.status == 200) {
-            msg.innerHTML = "✅ Changes Saved."
+        if (file && file.files && file.files.length > 4) {
+            return
+        }
+
+        if (!title) return
+        if (title.value == "") {
+            title.classList.add("required-error")
+            return
         } else {
-            msg.innerHTML = "❌ Failed to update. Please Try Again."
+            title.classList.remove("required-error")
+            submitForm()
         }
     }
 
-    xhttp.send(data)
-}
+    function validateFilesLength() {
+        if (!file || !label || !icon) return
+        const numImages = file.files.length
+        label.innerText = numImages + " IMGS"
+
+        if (numImages == 0) {
+            label.style.color = "white"
+            icon.style.backgroundPosition = normalIcon
+        } else if (numImages < 5) {
+            label.style.color = "var(--col-prim)"
+            icon.style.backgroundPosition = normalIcon
+        } else {
+            label.style.color = "var(--col-error)"
+            icon.style.backgroundPosition = errorIcon
+            label.innerText = "MAX 4 IMGS"
+        }
+
+        file.setAttribute("data-changed", "true")
+    }
+
+    function submitForm() {
+        if (!form) return
+        const data = new FormData(form)
+        if (revId) data.append("id", revId)
+        data.append("imagesChanged", file ? file.getAttribute("data-changed") : "false")
+
+        let xhttp = new XMLHttpRequest()
+        xhttp.open("POST", `/edit/review`, true)
+
+        xhttp.onreadystatechange = () => {
+            if (xhttp.readyState != 4) {
+                return
+            }
+
+            if (xhttp.status == 200) {
+                if (msg) msg.innerHTML = "✅ Changes Saved."
+            } else {
+                if (msg) msg.innerHTML = "❌ Failed to update. Please Try Again."
+            }
+        }
+
+        xhttp.send(data)
+    }
+})

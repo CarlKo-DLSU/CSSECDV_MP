@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function isFilterValid() {
         const val = filter ? (filter.value || '') : ''
         if (FORBIDDEN_RE.test(val)) {
-            showError('Input contains invalid characters.')
+            showError('❌ Input contains invalid characters.')
             return false
         }
         return true
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
     filter && filter.addEventListener('input', () => {
         const val = filter.value || ''
         if (FORBIDDEN_RE.test(val)) {
-            showError('Input contains invalid characters.')
+            showError('❌ Input contains invalid characters.')
         } else {
             showError('')
         }
