@@ -23,29 +23,38 @@ document.addEventListener('DOMContentLoaded', function () {
     const externalErrEl = document.getElementById('cr-error') || null
     let _dynErr = null
 
-    function showReviewError(text) {
-        if (externalErrEl) {
-            externalErrEl.textContent = text
+    function showReviewError(text, targetForm = null) {
+        // if a global external error element exists and no explicit target requested, use it
+        if (externalErrEl && !targetForm) {
+           externalErrEl.textContent = text
             return
         }
-        if (!form) return
-        if (!_dynErr) {
-            _dynErr = document.createElement('p')
-            _dynErr.style.color = '#c00'
-            _dynErr.style.marginTop = '6px'
-            // only use button as reference if it's actually a child of form
-            const ref = (button && button.parentNode === form) ? button : null
-            if (ref) {
-                form.insertBefore(_dynErr, ref)
+
+        const container = targetForm || form
+        if (!container) return
+
+        // store per-form dynamic error node so replies and create form don't conflict
+        if (!container._dynErr) {
+            const el = document.createElement('p')
+            el.style.color = '#c00'
+            el.style.marginTop = '6px'
+            // decide reference element: prefer the form's submit button if it's a direct child
+            let ref = null
+            if (container === form && button && button.parentNode === form) ref = button
+            if (container === orForm && orButton && orButton.parentNode === orForm) ref = orButton
+            if (ref && ref.parentNode === container) {
+                container.insertBefore(el, ref)
             } else {
-                form.appendChild(_dynErr)
+                container.appendChild(el)
             }
+            container._dynErr = el
         }
-        _dynErr.textContent = text
+        container._dynErr.textContent = text
     }
-    function clearReviewError() {
-        if (externalErrEl) externalErrEl.textContent = ''
-        if (_dynErr) _dynErr.textContent = ''
+    function clearReviewError(targetForm = null) {
+        if (externalErrEl && !targetForm) externalErrEl.textContent = ''
+        const container = targetForm || form
+        if (container && container._dynErr) container._dynErr.textContent = ''
     }
 
     if (file) {
@@ -109,11 +118,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const raw = String(orBody.value || '')
             if (REVIEW_FORBIDDEN_RE.test(raw)) {
                 orBody.classList.add('required-error')
-                showReviewError('❌ Invalid characters detected in input field/s.')
+                showReviewError('❌ Invalid characters detected in input field/s.', orForm)
                 if (orButton) orButton.disabled = true
             } else {
                 orBody.classList.remove('required-error')
-                clearReviewError()
+                clearReviewError(orForm)
                 if (orButton) orButton.disabled = false
             }
         })
@@ -171,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (orBody && REVIEW_FORBIDDEN_RE.test(String(orBody.value || ''))) {
             e.preventDefault()
             orBody.classList.add('required-error')
-            showReviewError('❌ Submission blocked: invalid characters detected in reply.')
+            showReviewError('❌ Submission blocked: invalid characters detected in reply.', orForm)
             if (orButton) orButton.disabled = true
             return
         }
