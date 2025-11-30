@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const content = document.getElementById('edit-content')
     const msg = document.getElementById('edit-msg')
     const cancel = document.getElementById('edit-cancel')
-    const saveLabel = document.getElementById('edit-save')        // label
-    const saveInput = document.getElementById('edit-submit')     // actual submit input
+    const saveLabel = document.getElementById('edit-save')
+    const saveInput = document.getElementById('edit-submit')
     const del = document.getElementById('edit-delete')
     const form = document.getElementById('edit-form')
     const rating = document.getElementById('cr-star-input')
@@ -87,18 +87,20 @@ document.addEventListener('DOMContentLoaded', function () {
             const raw = String(title.value || '')
             if (EDIT_REVIEW_FORBIDDEN_RE.test(raw)) {
                 title.classList.add('required-error')
-                showEditError('❌ Invalid characters detected in input field/s.')
+                showEditError('❌ Title contains invalid characters.')
                 if (saveInput) saveInput.disabled = true
-            } if (raw.length > TITLE_MAX) {
+                return
+            }
+            if (raw.length > TITLE_MAX) {
                 title.classList.add('required-error')
                 showEditError(`❌ Title exceeds ${TITLE_MAX} characters (${raw.length}/${TITLE_MAX}).`)
                 if (saveInput) saveInput.disabled = true
                 return
-            } else {
-                title.classList.remove('required-error')
-                clearEditError()
-                if (saveInput) saveInput.disabled = false
             }
+
+            title.classList.remove('required-error')
+            clearEditError()
+            if (saveInput) saveInput.disabled = false
         })
     }
 
@@ -107,18 +109,20 @@ document.addEventListener('DOMContentLoaded', function () {
             const raw = String(content.value || '')
             if (EDIT_REVIEW_FORBIDDEN_RE.test(raw)) {
                 content.classList.add('required-error')
-                showEditError('❌ Invalid characters detected in input field/s.')
+                showEditError('❌ Content contains invalid characters.')
                 if (saveInput) saveInput.disabled = true
-            } if (raw.length > BODY_MAX) {
+                return
+            }
+            if (raw.length > BODY_MAX) {
                 content.classList.add('required-error')
                 showEditError(`❌ Content exceeds ${BODY_MAX} characters (${raw.length}/${BODY_MAX}).`)
                 if (saveInput) saveInput.disabled = true
                 return
-            } else {
-                content.classList.remove('required-error')
-                clearEditError()
-                if (saveInput) saveInput.disabled = false
             }
+
+            content.classList.remove('required-error')
+            clearEditError()
+            if (saveInput) saveInput.disabled = false
         })
     }
 
