@@ -41,19 +41,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // initialize from data-stars attribute if present
-        const initial = parseFloat(group.getAttribute('data-stars') || '0');
-        renderStars(initial);
-
+        const rawInitial = parseFloat(group.getAttribute('data-stars') || '0');
         // determine associated hidden input (prefer within same form)
         const parentForm = group.closest('form');
-        // IMPORTANT: only consider a hidden input when the star group is inside a form.
-        // previous code used a global document.querySelector which made non-form/display groups interactive.
+        // only consider an input inside the same form (prevents accidental interactivity)
         const hiddenInput = parentForm
             ? (parentForm.querySelector('input[name="rv-stars"], input[name="stars"], input[id="cr-star-input"]') || null)
             : null;
 
         // interactive only when group has 'hov3' class or there's an input in the same form
         const interactive = group.classList.contains('hov3') || !!hiddenInput;
+
+        // For display-only groups (non-interactive) round to nearest 0.5 so rendering matches home
+        const initial = interactive ? rawInitial : (Math.round(rawInitial * 2) / 2);
+        renderStars(initial);
 
         if (!interactive) {
             // nothing more to do for display-only groups
