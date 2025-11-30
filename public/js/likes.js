@@ -2,8 +2,9 @@ const likeOn = "pro-toggle-like"
 const dislikeOn = "pro-toggle-dislike"
 
 function selectVote(form, value) {
-    const revId = form.getAttribute("data-review")
     const [likeButton, dislikeButton] = form.getElementsByTagName("label")
+
+    if (!likeButton || !dislikeButton) return
 
     if (value === "like") {
         likeButton.classList.add(likeOn)
@@ -12,9 +13,13 @@ function selectVote(form, value) {
         likeButton.classList.remove(likeOn)
         dislikeButton.classList.add(dislikeOn)
     } else {
+        // remove both
         likeButton.classList.remove(likeOn)
         dislikeButton.classList.remove(dislikeOn)
     }
+
+    // persist state on the form
+    form.setAttribute("data-state", value || "")
 }
 
 function castVote(id, vote, el) {
@@ -22,21 +27,23 @@ function castVote(id, vote, el) {
     xhttp.open("POST", "/review/vote", true) 
     xhttp.setRequestHeader("Content-type", "application/json; charset=UTF-8")
     xhttp.onreadystatechange = () => {
-        if (xhttp.readyState != 4) {
-            return
-        }
+        if (xhttp.readyState != 4) return
 
         if (xhttp.status == 200) {
-            el.innerHTML = xhttp.response
-            console.log(xhttp.response)
+            // server returns a simple count (text/number)
+            try {
+                el.innerText = xhttp.responseText
+            } catch (e) {
+                el.innerText = xhttp.responseText
+            }
         } else {
-            console.log("Server side error!")
+            console.log("Server side error!", xhttp.status, xhttp.responseText)
         }
     }
 
     xhttp.send(JSON.stringify({
         "id": id,
-        "vote": vote
+        "vote": vote // "like", "dislike", or "remove"
     }))
 }
 
@@ -52,16 +59,44 @@ window.onload = function() {
         }
 
         for (let i = 0; i < forms.length; i++) {
-            forms[i].querySelectorAll("input[name='vote']").forEach(input => {
-                if (xhttp.status == 200) {
-                    input.addEventListener("change", (e) => {
-                        selectVote(forms[i], e.target.value)
-                        castVote(forms[i].getAttribute("data-review"), e.target.value, forms[i].getElementsByClassName("pro-like-count")[0])
+            const form = forms[i]
+            const inputs = form.querySelectorAll("input[name='vote']")
+            const countEl = form.getElementsByClassName("pro-like-count")[0]
+            const revId = form.getAttribute("data-review")
+            const [likeLabel, dislikeLabel] = form.getElementsByTagName("label")
+
+            if (xhttp.status == 200) {
+                if (likeLabel) {
+                    likeLabel.addEventListener("click", (e) => {
+                        e.preventDefault()
+                        const currentStateNow = form.getAttribute("data-state") || ""
+                        if (currentStateNow === "like") {
+                            // remove existing like
+                            selectVote(form, null)
+                            castVote(revId, "remove", countEl)
+                        } else {
+                            selectVote(form, "like")
+                            castVote(revId, "like", countEl)
+                        }
                     })
-                } else {
-                    setUpPopup(input, lor_container)
                 }
-            })
+                if (dislikeLabel) {
+                    dislikeLabel.addEventListener("click", (e) => {
+                        e.preventDefault()
+                        const currentStateNow = form.getAttribute("data-state") || ""
+                        if (currentStateNow === "dislike") {
+                            // remove existing dislike
+                            selectVote(form, null)
+                            castVote(revId, "remove", countEl)
+                        } else {
+                            selectVote(form, "dislike")
+                            castVote(revId, "dislike", countEl)
+                        }
+                    })
+                }
+            } else {
+                inputs.forEach(input => setUpPopup(input, lor_container))
+            }
         }
     }
 

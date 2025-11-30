@@ -131,46 +131,88 @@ const query = {
         return Review.updateOne(safeFilter(field), set)
     },
     updateLikes: async (reviewId, profileId, vote) => {
-        // sanitize ids
-        const rId = isValidObjectId(reviewId) ? mongoose.Types.ObjectId(reviewId) : reviewId
-        const pId = isValidObjectId(profileId) ? mongoose.Types.ObjectId(profileId) : profileId
+        // normalize ids to ObjectId instances when given strings
+        const ensureOid = (v) => {
+            if (v == null) return v
+            if (typeof v === 'string' && mongoose.Types.ObjectId.isValid(v)) {
+                return new mongoose.Types.ObjectId(v)
+            }
+            return v
+        }
+
+        const rId = ensureOid(reviewId)
+        const pId = ensureOid(profileId)
 
         const review = await Review.findOne({ _id: rId })
         if (!review) return 0
-        const returnCount = Array.from(review.likes).length - Array.from(review.dislikes).length
+
+        // compute current net count
+        const likeCount = Array.from(review.likes).length
+        const dislikeCount = Array.from(review.dislikes).length
+        const returnCount = likeCount - dislikeCount
+
+        // helpers to check membership
+        const inLikes = (pId && review.likes.some(l => typeof l.equals === 'function' ? l.equals(pId) : String(l) === String(pId)))
+        const inDislikes = (pId && review.dislikes.some(d => typeof d.equals === 'function' ? d.equals(pId) : String(d) === String(pId)))
 
         if (vote === "like") {
-            if (review.likes.includes(pId)) {
+            if (inLikes) {
                 return returnCount
-            } else if (review.dislikes.includes(pId)) {
+            }
+            if (inDislikes) {
+                // switch dislike -> like
                 await Review.updateOne({ _id: review._id }, { $push: { likes: pId }, $pull: { dislikes: pId } })
-                if (!review.profileId.equals(pId)) {
-                    await Profile.updateOne({ _id: review.profileId._id }, { $inc: { erms: 3 } })
+                if (review.profileId && pId && !(typeof review.profileId.equals === 'function' ? review.profileId.equals(pId) : String(review.profileId) === String(pId))) {
+                    await Profile.updateOne({ _id: review.profileId._id || review.profileId }, { $inc: { erms: 3 } })
                 }
                 return returnCount + 2
             }
 
+            // fresh like
             await Review.updateOne({ _id: review._id }, { $push: { likes: pId } })
-            if (!review.profileId.equals(pId)) {
-                await Profile.updateOne({ _id: review.profileId._id }, { $inc: { erms: 2 } })
+            if (review.profileId && pId && !(typeof review.profileId.equals === 'function' ? review.profileId.equals(pId) : String(review.profileId) === String(pId))) {
+                await Profile.updateOne({ _id: review.profileId._id || review.profileId }, { $inc: { erms: 2 } })
             }
             return returnCount + 1
         } else if (vote === "dislike") {
-            if (review.dislikes.includes(pId)) {
+            if (inDislikes) {
                 return returnCount
-            } else if (review.likes.includes(pId)) {
+            }
+            if (inLikes) {
+                // switch like -> dislike
                 await Review.updateOne({ _id: review._id }, { $push: { dislikes: pId }, $pull: { likes: pId } })
-                if (!review.profileId.equals(pId)) {
-                    await Profile.updateOne({ _id: review.profileId._id }, { $inc: { erms: -3 } })
+                if (review.profileId && pId && !(typeof review.profileId.equals === 'function' ? review.profileId.equals(pId) : String(review.profileId) === String(pId))) {
+                    await Profile.updateOne({ _id: review.profileId._id || review.profileId }, { $inc: { erms: -3 } })
                 }
                 return returnCount - 2
             }
 
+            // fresh dislike
             await Review.updateOne({ _id: review._id }, { $push: { dislikes: pId } })
-            if (!review.profileId.equals(pId)) {
-                await Profile.updateOne({ _id: review.profileId._id }, { $inc: { erms: -1 } })
+            if (review.profileId && pId && !(typeof review.profileId.equals === 'function' ? review.profileId.equals(pId) : String(review.profileId) === String(pId))) {
+                await Profile.updateOne({ _id: review.profileId._id || review.profileId }, { $inc: { erms: -1 } })
             }
             return returnCount - 1
+        } else if (vote === "remove") {
+            // remove an existing like or dislike
+            if (inLikes) {
+                await Review.updateOne({ _id: review._id }, { $pull: { likes: pId } })
+                if (review.profileId && pId && !(typeof review.profileId.equals === 'function' ? review.profileId.equals(pId) : String(review.profileId) === String(pId))) {
+                    // removing a like: revert erms awarded for that like
+                    await Profile.updateOne({ _id: review.profileId._id || review.profileId }, { $inc: { erms: -2 } })
+                }
+                return returnCount - 1
+            }
+            if (inDislikes) {
+                await Review.updateOne({ _id: review._id }, { $pull: { dislikes: pId } })
+                if (review.profileId && pId && !(typeof review.profileId.equals === 'function' ? review.profileId.equals(pId) : String(review.profileId) === String(pId))) {
+                    // removing a dislike: revert penalty
+                    await Profile.updateOne({ _id: review.profileId._id || review.profileId }, { $inc: { erms: 1 } })
+                }
+                return returnCount + 1
+            }
+
+            return returnCount
         }
 
         return returnCount
