@@ -10,6 +10,23 @@ const query = require("./utility/query")
 const error = require("./utility/error")
 const helmet = require("helmet")
 const compression = require("compression")
+const fs = require('fs');
+const logStream = fs.createWriteStream(path.join(__dirname, 'server.log'), { flags: 'a' });
+function logWithTimestamp(type, ...args) {
+    const msg = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+    const line = `[${new Date().toISOString()}] [${type}] ${msg}\n`;
+    logStream.write(line);
+}
+const origLog = console.log;
+const origError = console.error;
+console.log = (...args) => {
+    origLog(...args);
+    logWithTimestamp('LOG', ...args);
+};
+console.error = (...args) => {
+    origError(...args);
+    logWithTimestamp('ERROR', ...args);
+};
 
 // express settings
 const app = new express()
@@ -119,6 +136,7 @@ const reviewRouter = require("./routes/review")
 const authRouter = require("./routes/auth")
 const editRouter = require("./routes/edit")
 const changePassRouter = require("./routes/changepass")
+const adminRouter = require("./routes/admin")
 
 app.use("/", homeRouter)
 app.use("/profile", profileRouter)
@@ -127,6 +145,7 @@ app.use("/review", reviewRouter)
 app.use("/auth", authRouter)
 app.use("/edit", editRouter)
 app.use("/changepass", changePassRouter)
+app.use("/admin", adminRouter)
 
 // basic error handler (keeps response minimal)
 app.use((err, req, res, next) => {

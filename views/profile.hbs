@@ -30,33 +30,58 @@
         <div class="admin-control-panel">
             <h3 id="admin-title">Admin Controls</h3>
 
-            <!-- Create manager/admin -->
             <div class="admin-menu">
+                <!-- Create new manager -->
                 <form method="POST" action="/admin/create" class="admin-form">
+                    <h4>Create New Manager</h4>
                     <input type="hidden" name="role" value="manager">
-                    <label>New Manager Username <input name="username" required></label>
-                    <label>Password <input name="password" type="password" required></label>
+                    <label>Username: <input name="username" type="text" required minlength="1" maxlength="30"></label>
+                    <label>Password: <input name="password" type="password" required minlength="8" maxlength="128"></label>
                     <button type="submit" class="admin-btn">Create Manager</button>
                 </form>
 
+                <!-- Create new admin -->
                 <form method="POST" action="/admin/create" class="admin-form">
+                    <h4>Create New Admin</h4>
                     <input type="hidden" name="role" value="admin">
-                    <label>New Admin Username <input name="username" required></label>
-                    <label>Password <input name="password" type="password" required></label>
+                    <label>Username: <input name="username" type="text" required minlength="1" maxlength="30"></label>
+                    <label>Password: <input name="password" type="password" required minlength="8" maxlength="128"></label>
                     <button type="submit" class="admin-btn">Create Admin</button>
                 </form>
 
-                <!-- Assign role to this profile -->
+                <!-- Assign role to existing user -->
                 <form method="POST" action="/admin/assign-role" class="admin-form" onsubmit="return confirm('Change role for this user?');">
-                    <input type="hidden" name="username" value="{{sb.name}}">
-                    <label>Assign Role
-                        <select name="role">
+                    <h4>Assign Role to User</h4>
+                    <label>Select User:
+                        <select name="username" required>
+                            <option value="">-- Select User --</option>
+                            {{#each allUsers}}
+                            <option value="{{this.name}}">{{this.name}} ({{this.role}})</option>
+                            {{/each}}
+                        </select>
+                    </label>
+                    <label>New Role:
+                        <select name="role" required>
                             <option value="reviewer">Reviewer</option>
                             <option value="manager">Manager</option>
                             <option value="admin">Admin</option>
                         </select>
                     </label>
                     <button type="submit" class="admin-btn">Assign Role</button>
+                </form>
+
+                <!-- Delete user -->
+                <form method="POST" action="/admin/delete" class="admin-form" onsubmit="return confirm('Delete this user? This cannot be undone. All their reviews will also be deleted.');">
+                    <h4>Delete User Account</h4>
+                    <label>Select User:
+                        <select name="username" required>
+                            <option value="">-- Select User --</option>
+                            {{#each allUsers}}
+                            <option value="{{this.name}}">{{this.name}} ({{this.role}})</option>
+                            {{/each}}
+                        </select>
+                    </label>
+                    <button type="submit" class="admin-btn admin-btn-danger">Delete User</button>
                 </form>
 
                 <!-- Read-only application logs -->

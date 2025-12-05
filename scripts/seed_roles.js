@@ -19,9 +19,27 @@ async function main() {
   console.log(`Updated ${updateRes.modifiedCount || updateRes.nModified || 0} existing documents to role='reviewer' (if any missing).`);
 
   // Create admin and manager users if they don't exist
+  const allowedQuestions = [
+    "What is the name of a childhood friend that no one else would know?",
+    "What is your favorite fictional location from a book or movie?",
+    "What is/was the name of your first pet?"
+  ];
+
   const accounts = [
-    { name: process.env.SEED_ADMIN_NAME || 'admin', pass: process.env.SEED_ADMIN_PASS || 'ChangeMe123!' , role: 'admin' },
-    { name: process.env.SEED_MANAGER_NAME || 'manager', pass: process.env.SEED_MANAGER_PASS || 'ChangeMe123!' , role: 'manager' }
+    { 
+      name: process.env.SEED_ADMIN_NAME || 'admin', 
+      pass: process.env.SEED_ADMIN_PASS || 'ChangeMe123!', 
+      role: 'admin',
+      recoveryQuestion: allowedQuestions[0],
+      recoveryAnswer: 'admin_recovery_answer'
+    },
+    { 
+      name: process.env.SEED_MANAGER_NAME || 'manager', 
+      pass: process.env.SEED_MANAGER_PASS || 'ChangeMe123!', 
+      role: 'manager',
+      recoveryQuestion: allowedQuestions[1],
+      recoveryAnswer: 'manager_recovery_answer'
+    }
   ];
 
   for (const acct of accounts) {
@@ -37,10 +55,29 @@ async function main() {
       continue;
     }
 
-    const hashed = await bcrypt.hash(acct.pass, 10);
-    const user = new Profile({ name: acct.name, password: hashed, role: acct.role });
+    // Hash password and recovery answer
+    const hashedPassword = await bcrypt.hash(acct.pass, 10);
+    const hashedAnswer = await bcrypt.hash(acct.recoveryAnswer.toLowerCase().trim(), 10);
+
+    const user = new Profile({ 
+      name: acct.name, 
+      password: hashedPassword, 
+      role: acct.role,
+      recoveryQuestion: acct.recoveryQuestion,
+      recoveryAnswerHash: hashedAnswer,
+      previousPasswords: [],
+      lastPasswordChange: new Date(),
+      failedLoginAttempts: 0,
+      lockUntil: null,
+      lastLoginAttempt: null,
+      lastSuccessfulLogin: null
+    });
+    
     await user.save();
-    console.log(`Created ${acct.role} account '${acct.name}' with temporary password '${acct.pass}'. Please change it immediately.`);
+    console.log(`Created ${acct.role} account '${acct.name}' with temporary password '${acct.pass}'.`);
+    console.log(`  Recovery question: "${acct.recoveryQuestion}"`);
+    console.log(`  Recovery answer: "${acct.recoveryAnswer}" (for testing only)`);
+    console.log(`  Please change password immediately after first login!`);
   }
 
   await mongoose.disconnect();

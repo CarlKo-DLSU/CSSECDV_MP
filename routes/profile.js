@@ -4,6 +4,7 @@ const query = require("../utility/query")
 const { sortFilterReviews } = require("../utility/sfHelper")
 const error = require("../utility/error")
 const checkAuthenticate = require("../utility/checkauthenticate")
+const Profile = require("../database/models/Profile")
 
 router.get('/id/:profileId', checkAuthenticate, async (req, res) => {
     try {
@@ -36,11 +37,17 @@ router.get('/id/:profileId', checkAuthenticate, async (req, res) => {
             isCurrentUser = profile._id.equals(req.user._id) 
         }
 
+        // If current user is admin, fetch all usernames for dropdowns
+        let allUsers = []
+        if (req.user && req.user.role === 'admin') {
+            allUsers = await Profile.find({}, 'name role').lean()
+        }
+
         const sfReviews = await sortFilterReviews(reviews, min, max, sort, order, page, or, filter, req.user)
         const empty = sfReviews.length == 0
 
         console.log(`ROUTE -> profile: ${req.params.profileId}`)
-        res.render('profile', { sb: sb, reviews: sfReviews, isCurrentUser: isCurrentUser, empty: empty })
+        res.render('profile', { sb: sb, reviews: sfReviews, isCurrentUser: isCurrentUser, empty: empty, allUsers: allUsers })
     } catch (err) {
         console.log(`ERROR! ${err.message}`)
 

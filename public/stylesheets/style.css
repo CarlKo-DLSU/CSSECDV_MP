@@ -1459,20 +1459,124 @@ body {
     padding: 20px;
 }
 
-#admin-title{
+/* Admin Control Panel Styles */
+.admin-control-panel {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: rgba(22, 56, 38, 0.9);
+    border: 2px solid var(--col-prim);
+    border-radius: var(--brad--def);
+}
+
+#admin-title {
     font-size: 2rem;
-    margin-top: 20px;
-    color: white;
-    padding-bottom: 1rem;
+    margin-bottom: 20px;
+    color: var(--col-prim);
+    text-align: center;
+    border-bottom: 2px solid var(--col-prim);
+    padding-bottom: 10px;
+}
+
+.admin-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
 }
 
 .admin-form {
-    padding: .5rem;
-    margin-bottom: .3rem;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
-.admin-menu{
-    padding: 1.5rem;
-    background-color: white;
-    border-radius: 10px;
+.admin-form h4 {
+    color: var(--col-bg);
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    border-bottom: 2px solid var(--col-prim);
+    padding-bottom: 8px;
+}
+
+.admin-form label {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--col-bg);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.admin-form input[type="text"],
+.admin-form input[type="password"],
+.admin-form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: 'Montserrat', sans-serif;
+    transition: border-color 0.3s;
+}
+
+.admin-form input[type="text"]:focus,
+.admin-form input[type="password"]:focus,
+.admin-form select:focus {
+    outline: none;
+    border-color: var(--col-prim);
+}
+
+.admin-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background-color: var(--col-prim);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.admin-btn:hover {
+    background-color: #e88f41;
+    transform: translateY(-2px);
+}
+
+.admin-btn:active {
+    transform: translateY(0);
+}
+
+.admin-btn-danger {
+    background-color: #e63946;
+}
+
+.admin-btn-danger:hover {
+    background-color: #d62828;
+}
+
+.admin-logs {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.admin-logs a {
+    text-decoration: none;
+}
+
+/* Success message styling */
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: center;
 }

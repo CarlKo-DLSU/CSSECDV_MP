@@ -1,0 +1,144 @@
+[2025-12-05T11:38:34.724Z] [LOG] SERVER IS UP!
+[2025-12-05T11:39:21.099Z] [LOG] SERVER IS UP!
+[2025-12-05T11:39:23.303Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:39:23.304Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:39:23.308Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:39:23.309Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:39:23.355Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:39:23.355Z] [LOG] ROUTE -> index
+[2025-12-05T11:39:27.715Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:39:42.902Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:39:42.902Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:39:42.904Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:39:42.905Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:39:42.933Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:39:42.933Z] [LOG] ROUTE -> index
+[2025-12-05T11:39:49.133Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:39:49.134Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:39:49.135Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:39:49.135Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:39:49.156Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:39:49.157Z] [LOG] ROUTE -> index
+[2025-12-05T11:39:50.797Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:40:17.575Z] [LOG] Admin admin created new manager account: newUser
+[2025-12-05T11:40:17.658Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:40:49.811Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:40:49.811Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:40:49.812Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:40:49.812Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:40:49.830Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:40:49.830Z] [LOG] ROUTE -> index
+[2025-12-05T11:40:58.624Z] [LOG] ROUTE -> resto: Nuka-Cola Cafeteria
+[2025-12-05T11:41:13.022Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:41:13.023Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:41:13.024Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:41:13.025Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:41:13.041Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:41:13.042Z] [LOG] ROUTE -> index
+[2025-12-05T11:41:14.585Z] [LOG] ROUTE -> profile: sussus amogus
+[2025-12-05T11:41:21.029Z] [LOG] ROUTE -> EDIT PROFILE (sussus amogus)
+[2025-12-05T11:41:30.586Z] [LOG] ROUTE -> profile: sussus amogus
+[2025-12-05T11:41:33.998Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:41:33.998Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:41:34.000Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:41:34.000Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:41:34.018Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:41:34.018Z] [LOG] ROUTE -> index
+[2025-12-05T11:41:34.747Z] [LOG] ROUTE -> resto: McWonald's
+[2025-12-05T11:41:35.792Z] [LOG] ROUTE -> profile: Bob123
+[2025-12-05T11:41:37.862Z] [LOG] ROUTE -> profile: sussus amogus
+[2025-12-05T11:41:39.548Z] [LOG] REVIEW: 5fc36b4ee1f20c5d8fdeab91 gains a like.
+[2025-12-05T11:41:41.552Z] [LOG] REVIEW: 5fc36b4ee1f20c5d8fdeab91 gains a remove.
+[2025-12-05T11:41:43.018Z] [LOG] REVIEW: 5fc36b4ee1f20c5d8fdeab96 gains a like.
+[2025-12-05T11:41:44.151Z] [LOG] REVIEW: 5fc36b4ee1f20c5d8fdeab96 gains a remove.
+[2025-12-05T11:41:57.084Z] [LOG] ROUTE -> profile: sussus amogus
+[2025-12-05T11:41:58.242Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:41:58.242Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:41:58.243Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:41:58.243Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:41:58.257Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:41:58.257Z] [LOG] ROUTE -> index
+[2025-12-05T11:42:07.431Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:42:07.431Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:42:07.432Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:42:07.432Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:42:07.445Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:42:07.445Z] [LOG] ROUTE -> index
+[2025-12-05T11:42:08.585Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:42:43.170Z] [LOG] Admin admin deleted user newUser
+[2025-12-05T11:42:43.179Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:42:56.830Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:42:56.834Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:42:56.836Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:42:56.837Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:42:56.853Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:42:56.853Z] [LOG] ROUTE -> index
+[2025-12-05T11:43:02.148Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:43:02.149Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:43:02.149Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:43:02.150Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:43:02.163Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:43:02.163Z] [LOG] ROUTE -> index
+[2025-12-05T11:43:03.761Z] [LOG] ROUTE -> profile: sussus amogus
+[2025-12-05T11:43:08.024Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:43:08.025Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:43:08.026Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:43:08.026Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:43:08.041Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:43:08.041Z] [LOG] ROUTE -> index
+[2025-12-05T11:43:13.058Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:43:13.058Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:43:13.059Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:43:13.059Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:43:13.072Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:43:13.072Z] [LOG] ROUTE -> index
+[2025-12-05T11:43:14.729Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:43:21.488Z] [LOG] Admin admin changed sussus amogus role to admin
+[2025-12-05T11:43:21.498Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:43:23.110Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:43:23.110Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:43:23.112Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:43:23.113Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:43:23.128Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:43:23.128Z] [LOG] ROUTE -> index
+[2025-12-05T11:43:27.946Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:43:27.946Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:43:27.947Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:43:27.948Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:43:27.960Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:43:27.960Z] [LOG] ROUTE -> index
+[2025-12-05T11:43:29.881Z] [LOG] ROUTE -> profile: sussus amogus
+[2025-12-05T11:43:36.858Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:43:36.858Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:43:36.860Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:43:36.860Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:43:36.876Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:43:36.876Z] [LOG] ROUTE -> index
+[2025-12-05T11:43:46.579Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:43:46.579Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:43:46.580Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:43:46.581Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:43:46.595Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:43:46.595Z] [LOG] ROUTE -> index
+[2025-12-05T11:43:47.561Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:44:00.520Z] [LOG] Admin admin changed sussus amogus role to reviewer
+[2025-12-05T11:44:00.530Z] [LOG] ROUTE -> profile: admin
+[2025-12-05T11:44:13.375Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:44:13.375Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:44:13.376Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:44:13.377Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:44:13.393Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:44:13.393Z] [LOG] ROUTE -> index
+[2025-12-05T11:44:18.022Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:44:18.022Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:44:18.023Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:44:18.023Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:44:18.037Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:44:18.037Z] [LOG] ROUTE -> index
+[2025-12-05T11:44:19.645Z] [LOG] ROUTE -> profile: sussus amogus
+[2025-12-05T11:44:21.925Z] [LOG] ROUTE -> req.query: {}
+[2025-12-05T11:44:21.925Z] [LOG] ROUTE -> filter: null  regex: {}
+[2025-12-05T11:44:21.926Z] [LOG] ROUTE -> restos from DB (after filter): 6
+[2025-12-05T11:44:21.927Z] [LOG] ROUTE -> sample names: ["Burger Man","Fred's Froyo","McWonald's","Chum Casket","Nuka-Cola Cafeteria","Shoney's Family Diner"]
+[2025-12-05T11:44:21.942Z] [LOG] ROUTE -> sfRestos length: 6
+[2025-12-05T11:44:21.942Z] [LOG] ROUTE -> index
