@@ -11,6 +11,13 @@ const form = document.getElementById('edit-form')
 // store original name so we can allow unchanged-name saves
 const originalName = name ? String(name.value || '') : ''
 
+const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+function fileHasAllowedExt(f) {
+    if (!f || !f.name) return false
+    const n = String(f.name || '').toLowerCase()
+    return ALLOWED_IMAGE_EXTS.some(ext => n.endsWith(ext))
+}
+
 const EDITPROFILENAME_FORBIDDEN_RE = /[\x00-\x20\x7F\\\$\[\]]/
 const EDITPROFILEDESC_FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
 const submitInput = document.getElementById('edit-submit') // actual submit input
@@ -24,13 +31,34 @@ if (name) name.addEventListener('focus', emptyMsg)
 if (desc) desc.addEventListener('focus', emptyMsg)
 if (avatar) avatar.addEventListener('change', () => {
     if (!form || !imgShown) return
+    const f = avatar.files && avatar.files[0] ? avatar.files[0] : null
+    if (!f) return
+    // validate extension before previewing
+    if (!fileHasAllowedExt(f)) {
+        if (msg) msg.innerHTML = "❌ Invalid avatar image type. Allowed: .jpg, .png, .gif, .jfif, .webp, .jpeg"
+       if (submitInput) submitInput.disabled = true
+        imgShown.removeAttribute('src')
+        return
+    }
+    // valid -> preview and clear errors
     const data = new FormData(form)
     const newAvatar = URL.createObjectURL(data.get("avatar"))
     imgShown.setAttribute("src", newAvatar)
+    if (msg) msg.innerHTML = ""
+    if (submitInput) submitInput.disabled = false
 })
 
 if (form) {
     form.addEventListener("submit", (e) => {
+        // validate avatar extension (prevent submit if invalid)
+        const sel = avatar && avatar.files && avatar.files[0] ? avatar.files[0] : null
+        if (sel && !fileHasAllowedExt(sel)) {
+            e.preventDefault()
+            if (msg) msg.innerHTML = "❌ Invalid avatar image type. Allowed: .jpg, .png, .gif, .jfif, .webp, .jpeg"
+            if (submitInput) submitInput.disabled = true
+            return
+        }
+
         const rawName = name ? String(name.value || '') : ''
         const rawDesc = desc ? String(desc.value || '') : ''
         if (EDITPROFILENAME_FORBIDDEN_RE.test(rawName) || EDITPROFILEDESC_FORBIDDEN_RE.test(rawDesc)) {

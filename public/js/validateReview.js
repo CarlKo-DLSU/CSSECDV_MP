@@ -11,6 +11,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const label = document.getElementById("cr-upload-text")
     const icon = document.getElementsByClassName("cr-img-i")[0]
 
+    const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+
+    function fileHasAllowedExt(f) {
+        if (!f || !f.name) return false
+        const name = String(f.name || '').toLowerCase()
+        return ALLOWED_IMAGE_EXTS.some(ext => name.endsWith(ext))
+    }
+
     const orForm = document.getElementById('or-form')
     const orBody = document.getElementById('or-content')
     const orButton = document.getElementById('or-post')
@@ -200,6 +208,21 @@ document.addEventListener('DOMContentLoaded', function () {
     function validateFilesLength() {
         if (!file || !label || !icon) return
         const numImages = file.files.length
+
+        // validate extensions
+        for (let i = 0; i < numImages; i++) {
+            const f = file.files[i]
+           if (!fileHasAllowedExt(f)) {
+                label.innerText = "INVALID FILE"
+                label.style.color = "var(--col-error)"
+                if (button) button.disabled = true
+                showReviewError('❌ Invalid image type. Allowed: .jpg, .png, .gif, .jfif, .webp, .jpeg')
+                return
+            }
+        }
+        // clear any previous file-type error
+        clearReviewError()
+
         label.innerText = numImages + " IMGS"
 
         if (numImages == 0) {

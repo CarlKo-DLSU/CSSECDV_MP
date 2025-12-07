@@ -1,6 +1,7 @@
 const express = require("express")
 const router = express.Router()
 const multer = require("multer")
+const path = require("path")
 const query = require("../utility/query")
 const error = require("../utility/error")
 const checkAuthenticate = require("../utility/checkauthenticate")
@@ -16,7 +17,20 @@ const storage = multer.diskStorage({
 })
 
 const maxuploads = 4
-const upload = multer({ storage: storage })
+
+// only allow these extensions
+const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+
+function imageFileFilter(req, file, cb) {
+    const ext = path.extname(file.originalname || '').toLowerCase()
+    if (ALLOWED_IMAGE_EXTS.includes(ext)) {
+        cb(null, true)
+    } else {
+        cb(new Error('Invalid file type'), false)
+    }
+}
+
+const upload = multer({ storage: storage, fileFilter: imageFileFilter })
 
 router.post("/new/:restoId", upload.array("rv-images", maxuploads), async (req, res) => {
     try {

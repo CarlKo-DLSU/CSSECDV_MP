@@ -20,6 +20,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const icon = document.getElementsByClassName("cr-img-i")[0]
     const oldImages = label ? parseInt(label.getAttribute("data-oldImages") || "0", 10) : 0
 
+    const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+    function fileHasAllowedExt(f) {
+        if (!f || !f.name) return false
+        const name = String(f.name || '').toLowerCase()
+        return ALLOWED_IMAGE_EXTS.some(ext => name.endsWith(ext))
+    }
+
     if (title) title.setAttribute('maxlength', String(TITLE_MAX))
     if (content) content.setAttribute('maxlength', String(BODY_MAX))
 
@@ -167,6 +174,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function validateFilesLength() {
         if (!file || !label || !icon) return
         const numImages = file.files.length
+
+        // check extensions
+        for (let i = 0; i < numImages; i++) {
+            const f = file.files[i]
+            if (!fileHasAllowedExt(f)) {
+                label.innerText = "INVALID FILE"
+                label.style.color = "var(--col-error)"
+                showEditError('❌ Invalid image type. Allowed: .jpg, .png, .gif, .jfif, .webp, .jpeg')
+                if (saveInput) saveInput.disabled = true
+                return
+            }
+        }
+        // clear previous errors
+        clearEditError()
+        if (saveInput) saveInput.disabled = false
+        
         label.innerText = numImages + " IMGS"
 
         if (numImages == 0) {

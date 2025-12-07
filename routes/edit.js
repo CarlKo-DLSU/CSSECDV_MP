@@ -27,8 +27,29 @@ const storage2 = multer.diskStorage({
     }
 })
 
-const av = multer({ storage: storage })
-const up = multer({ storage: storage2 })
+// server-side allowed avatar extensions
+const ALLOWED_AVATAR_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+function avatarFileFilter(req, file, cb) {
+    const ext = path.extname(file.originalname || '').toLowerCase()
+    if (ALLOWED_AVATAR_EXTS.includes(ext)) {
+        cb(null, true)
+    } else {
+        // signal an error so we can respond with 400
+        cb(new Error('Invalid avatar file type'))
+    }
+}
+const av = multer({ storage: storage, fileFilter: avatarFileFilter })
+
+const ALLOWED_UPLOAD_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+function imageFileFilter(req, file, cb) {
+    const ext = path.extname(file.originalname || '').toLowerCase()
+    if (ALLOWED_UPLOAD_EXTS.includes(ext)) {
+        cb(null, true)
+    } else {
+        cb(new Error('Invalid image file type'))
+    }
+}
+const up = multer({ storage: storage2, fileFilter: imageFileFilter })
 
 router.get('/user', checkAuthenticate, (req, res) => {
     if (!req.isAuthenticated()) {
@@ -67,7 +88,15 @@ router.get("/review/:revId", checkAuthenticate, async (req, res) => {
     }
 })
 
-router.post('/profile', av.single("avatar"), async (req, res) => {
+router.post('/profile', (req, res, next) => {
+    av.single("avatar")(req, res, (err) => {
+        if (err) {
+            console.log(`Invalid avatar upload: ${err.message}`)
+            return res.status(400).send("Invalid avatar image type.")
+        }
+        next()
+    })
+}, async (req, res) => {
     try {
         const user = req.user
         const name = req.body.name
@@ -113,7 +142,15 @@ router.post('/profile', av.single("avatar"), async (req, res) => {
     }
 })
 
-router.post('/review', up.array("images", 4), async (req, res) => {
+router.post('/review', (req, res, next) => {
+    up.array("images", 4)(req, res, (err) => {
+        if (err) {
+            console.log(`Invalid review image upload: ${err.message}`)
+            return res.status(400).send("Invalid image type.")
+        }
+        next()
+    })
+}, async (req, res) => {
     try {
         const user = req.user
         const { title, content, stars, id, imagesChanged } = req.body
