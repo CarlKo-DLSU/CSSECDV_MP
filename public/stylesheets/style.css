@@ -1580,3 +1580,106 @@ body {
     margin-bottom: 15px;
     text-align: center;
 }
+
+/* Manager Control Panel Styles */
+.manager-control-panel {
+    margin: 20px auto;
+    padding: 20px;
+    background-color: rgba(34, 51, 76, 0.9);
+    border: 2px solid #5a9fd4;
+    border-radius: var(--brad--def);
+    max-width: 1200px;
+}
+
+#manager-title {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #5a9fd4;
+    text-align: center;
+    border-bottom: 2px solid #5a9fd4;
+    padding-bottom: 10px;
+}
+
+.manager-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.manager-form {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.manager-form h4 {
+    color: var(--col-bg);
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #5a9fd4;
+    padding-bottom: 8px;
+}
+
+.manager-form label {
+    display: block;
+    margin-bottom: 12px;
+    color: var(--col-bg);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.manager-form input[type="text"],
+.manager-form input[type="password"],
+.manager-form select,
+.manager-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: 'Montserrat', sans-serif;
+    transition: border-color 0.3s;
+}
+
+.manager-form input[type="text"]:focus,
+.manager-form input[type="password"]:focus,
+.manager-form select:focus,
+.manager-form textarea:focus {
+    outline: none;
+    border-color: #5a9fd4;
+}
+
+.manager-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background-color: #5a9fd4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.manager-btn:hover {
+    background-color: #4488b8;
+    transform: translateY(-2px);
+}
+
+.manager-btn:active {
+    transform: translateY(0);
+}
+
+.manager-btn-danger {
+    background-color: #e63946;
+}
+
+.manager-btn-danger:hover {
+    background-color: #d62828;
+}

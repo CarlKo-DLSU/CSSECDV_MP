@@ -69,6 +69,14 @@ hbs.registerHelper('hasRole', function(user, role, options) {
     return options.inverse(this);
 });
 
+hbs.registerHelper('or', function(a, b) {
+    return a || b;
+});
+
+hbs.registerHelper('eq', function(a, b) {
+    return a === b;
+});
+
 const session = require("express-session")
 const MongoStore = require('connect-mongo');
 const passport = require('passport')
@@ -137,6 +145,7 @@ const authRouter = require("./routes/auth")
 const editRouter = require("./routes/edit")
 const changePassRouter = require("./routes/changepass")
 const adminRouter = require("./routes/admin")
+const managerRouter = require("./routes/manager")
 
 app.use("/", homeRouter)
 app.use("/profile", profileRouter)
@@ -146,6 +155,7 @@ app.use("/auth", authRouter)
 app.use("/edit", editRouter)
 app.use("/changepass", changePassRouter)
 app.use("/admin", adminRouter)
+app.use("/manager", managerRouter)
 
 // basic error handler (keeps response minimal)
 app.use((err, req, res, next) => {

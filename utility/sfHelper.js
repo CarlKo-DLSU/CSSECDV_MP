@@ -63,7 +63,13 @@ async function sortFilterReviews(reviews, min, max, sort, order, page, or, filte
         r.erms = r.profileId.erms
 
         if (user) {
-            r.edit = user._id.equals(r.profileId._id)
+            const isReviewer = user._id.equals(r.profileId._id)
+            const isManager = user.role === 'manager'
+            const isAdmin = user.role === 'admin'
+            
+            r.edit = isReviewer || isManager || isAdmin
+            r.canDelete = isReviewer || isManager || isAdmin
+            
             if (r.likes.map(l => l.toString()).includes(user._id.toString())) {
                 r.state = "like"
             } else if (r.dislikes.map(l => l.toString()).includes(user._id.toString())) {

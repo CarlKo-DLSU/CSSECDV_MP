@@ -52,6 +52,15 @@ router.get("/review/:revId", checkAuthenticate, async (req, res) => {
             error.throwReviewFetchError()
         }
 
+        // Check authorization: user must be the reviewer, a manager, or admin
+        const isReviewer = review.profileId._id.equals(req.user._id);
+        const isManager = req.user.role === 'manager';
+        const isAdmin = req.user.role === 'admin';
+        
+        if (!isReviewer && !isManager && !isAdmin) {
+            return res.redirect('/error?errorMsg=' + encodeURIComponent('You do not have permission to edit this review.'));
+        }
+
         review.oldImages = review.uploads.length
 
         console.log(`ROUTE -> EDIT REVIEW (${review.title})`)
@@ -130,7 +139,17 @@ router.post('/review', up.array("images", 4), async (req, res) => {
             res.status(400).send("Bad data.")
         }
 
-        if (review.profileId._id.equals(user._id)) {
+        // Check authorization: user must be the reviewer, a manager, or admin
+        const isReviewer = review.profileId._id.equals(user._id);
+        const isManager = user.role === 'manager';
+        const isAdmin = user.role === 'admin';
+
+        if (!isReviewer && !isManager && !isAdmin) {
+            res.status(403).send("Unauthorized: You do not have permission to edit this review.")
+            return
+        }
+
+        if (isReviewer || isManager || isAdmin) {
             const oldImages = review.uploads
             const updateObj = { title: title, body: content, stars: stars }
             if (imagesChanged === "true") {
@@ -151,7 +170,7 @@ router.post('/review', up.array("images", 4), async (req, res) => {
                 updateObj.edited = true
                 updateObj.lastUpdated = new Date()
 
-                console.log(`ROUTE -> UPDATED REVIEW (${id})`)
+                console.log(`ROUTE -> UPDATED REVIEW (${id}) by ${user.role} ${user.name}`)
                 await query.updateReview({ _id: id }, { $set: updateObj })
             } else {
                 console.log(`ROUTE -> NO CHANGES TO REVIEW (${id})`)
@@ -177,7 +196,12 @@ router.post("/delete", async (req, res) => {
             error.throwReviewFetchError()
         }
 
-        if (!req.isAuthenticated() || !req.user._id.equals(review.profileId._id)) {
+        // Check authorization: user must be the reviewer, a manager, or admin
+        const isReviewer = req.user._id.equals(review.profileId._id);
+        const isManager = req.user.role === 'manager';
+        const isAdmin = req.user.role === 'admin';
+
+        if (!req.isAuthenticated() || (!isReviewer && !isManager && !isAdmin)) {
             error.throwLoginFailError()
         }
 
@@ -195,7 +219,7 @@ router.post("/delete", async (req, res) => {
             })
         })
 
-        console.log("DELETED: " + review.title)
+        console.log(`DELETED: ${review.title} by ${req.user.role} ${req.user.name}`)
         res.redirect(`/resto/id/${review.restoId.name}`)
     } catch (err) {
         console.log(`ERROR! ${err.message}`)

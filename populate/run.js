@@ -32,6 +32,11 @@ function convertIdsToObjectId(data) {
             item.profileId = new ObjectId(item.profileId);
         }
 
+        // Set role to 'reviewer' if not specified (these are regular user accounts)
+        if (!item.role) {
+            item.role = 'reviewer';
+        }
+
         return item;
     });
 }

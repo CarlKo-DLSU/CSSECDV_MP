@@ -91,6 +91,104 @@
             </div>
         </div>
         {{/hasRole}}
+
+        {{!-- Manager control panel: only visible to managers --}}
+        {{#hasRole currentUser 'manager'}}
+        <div class="manager-control-panel">
+            <h3 id="manager-title">Manager Controls</h3>
+
+            <div class="manager-menu">
+                <!-- Edit user description -->
+                <form method="POST" action="/manager/assign-reviewer-role" class="manager-form" onsubmit="return confirm('Update this user?');">
+                    <h4>Edit User</h4>
+                    <label>Select User:
+                        <select name="username" required>
+                            <option value="">-- Select User --</option>
+                            {{#each allUsers}}
+                            {{#unless (or (eq this.role 'admin') (eq this.role 'manager'))}}
+                            <option value="{{this.name}}">{{this.name}}</option>
+                            {{/unless}}
+                            {{/each}}
+                        </select>
+                    </label>
+                    <label>Description: <textarea name="description" maxlength="500" rows="3" placeholder="Update user description..."></textarea></label>
+                    <button type="submit" class="manager-btn">Update User</button>
+                </form>
+
+                <!-- Delete user account -->
+                <form method="POST" action="/manager/delete-reviewer" class="manager-form" onsubmit="return confirm('Delete this user? This cannot be undone. All their reviews will also be deleted.');">
+                    <h4>Delete User Account</h4>
+                    <label>Select User:
+                        <select name="username" required>
+                            <option value="">-- Select User --</option>
+                            {{#each allUsers}}
+                            {{#unless (or (eq this.role 'admin') (eq this.role 'manager'))}}
+                            <option value="{{this.name}}">{{this.name}}</option>
+                            {{/unless}}
+                            {{/each}}
+                        </select>
+                    </label>
+                    <button type="submit" class="manager-btn manager-btn-danger">Delete User</button>
+                </form>
+
+                <!-- Add restaurant -->
+                <form method="POST" action="/manager/add-restaurant" class="manager-form">
+                    <h4>Add Restaurant</h4>
+                    <label>Restaurant Name: <input name="name" type="text" required maxlength="100"></label>
+                    <label>Owner: 
+                        <select name="owner" required>
+                            <option value="">-- Select Owner --</option>
+                            {{#each allUsers}}
+                            {{#unless (or (eq this.role 'admin') (eq this.role 'manager'))}}
+                            <option value="{{this.name}}">{{this.name}}</option>
+                            {{/unless}}
+                            {{/each}}
+                        </select>
+                    </label>
+                    <label>Description: <textarea name="description" maxlength="500" rows="2" placeholder="Restaurant description..."></textarea></label>
+                    <button type="submit" class="manager-btn">Add Restaurant</button>
+                </form>
+
+                <!-- Delete restaurant -->
+                <form method="POST" action="/manager/delete-restaurant" class="manager-form" onsubmit="return confirm('Delete this restaurant? This cannot be undone. All its reviews will also be deleted.');">
+                    <h4>Delete Restaurant</h4>
+                    <label>Select Restaurant:
+                        <select name="restaurantId" required>
+                            <option value="">-- Select Restaurant --</option>
+                            {{#each allRestos}}
+                            <option value="{{this._id}}">{{this.name}}</option>
+                            {{/each}}
+                        </select>
+                    </label>
+                    <button type="submit" class="manager-btn manager-btn-danger">Delete Restaurant</button>
+                </form>
+
+                <!-- Unassign restaurant owner -->
+                <form method="POST" action="/manager/unassign-restaurant" class="manager-form" onsubmit="return confirm('Reassign this restaurant to a different owner?');">
+                    <h4>Reassign Restaurant Owner</h4>
+                    <label>Select Restaurant:
+                        <select name="restaurantId" required>
+                            <option value="">-- Select Restaurant --</option>
+                            {{#each allRestos}}
+                            <option value="{{this._id}}">{{this.name}} (Owner: {{this.owner.name}})</option>
+                            {{/each}}
+                        </select>
+                    </label>
+                    <label>New Owner: 
+                        <select name="newOwner" required>
+                            <option value="">-- Select New Owner --</option>
+                            {{#each allUsers}}
+                            {{#unless (or (eq this.role 'admin') (eq this.role 'manager'))}}
+                            <option value="{{this.name}}">{{this.name}}</option>
+                            {{/unless}}
+                            {{/each}}
+                        </select>
+                    </label>
+                    <button type="submit" class="manager-btn">Reassign Owner</button>
+                </form>
+            </div>
+        </div>
+        {{/hasRole}}
         {{# if empty}}
         <div id="empty-reviews-msg">No reviews found (ￗ﹏ￗ )</div>
         {{/if}}
