@@ -3,6 +3,7 @@ const router = express.Router()
 const query = require("../utility/query")
 const error = require("../utility/error")
 const multer = require("multer")
+const path = require("path")
 const fs = require("fs")
 const checkAuthenticate = require("../utility/checkauthenticate")
 const { updateOne } = require("../database/models/Profile")
@@ -27,6 +28,8 @@ const storage2 = multer.diskStorage({
     }
 })
 
+const FILE_MAX_BYTES = 10 * 1024 * 1024
+
 // server-side allowed avatar extensions
 const ALLOWED_AVATAR_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
 function avatarFileFilter(req, file, cb) {
@@ -38,7 +41,7 @@ function avatarFileFilter(req, file, cb) {
         cb(new Error('Invalid avatar file type'))
     }
 }
-const av = multer({ storage: storage, fileFilter: avatarFileFilter })
+const av = multer({ storage: storage, fileFilter: avatarFileFilter, limits: { fileSize: FILE_MAX_BYTES } })
 
 const ALLOWED_UPLOAD_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
 function imageFileFilter(req, file, cb) {
@@ -49,7 +52,7 @@ function imageFileFilter(req, file, cb) {
         cb(new Error('Invalid image file type'))
     }
 }
-const up = multer({ storage: storage2, fileFilter: imageFileFilter })
+const up = multer({ storage: storage2, fileFilter: imageFileFilter, limits: { fileSize: FILE_MAX_BYTES } })
 
 router.get('/user', checkAuthenticate, (req, res) => {
     if (!req.isAuthenticated()) {
@@ -91,7 +94,10 @@ router.get("/review/:revId", checkAuthenticate, async (req, res) => {
 router.post('/profile', (req, res, next) => {
     av.single("avatar")(req, res, (err) => {
         if (err) {
-            console.log(`Invalid avatar upload: ${err.message}`)
+            console.log(`Avatar upload error: ${err && err.code ? err.code : err.message}`)
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).send("Avatar exceeds the 10MB limit.")
+            }
             return res.status(400).send("Invalid avatar image type.")
         }
         next()
@@ -145,7 +151,10 @@ router.post('/profile', (req, res, next) => {
 router.post('/review', (req, res, next) => {
     up.array("images", 4)(req, res, (err) => {
         if (err) {
-            console.log(`Invalid review image upload: ${err.message}`)
+           console.log(`Review image upload error: ${err && err.code ? err.code : err.message}`)
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).send("One or more images exceed the 10MB limit.")
+            }
             return res.status(400).send("Invalid image type.")
         }
         next()

@@ -12,10 +12,16 @@ const form = document.getElementById('edit-form')
 const originalName = name ? String(name.value || '') : ''
 
 const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+const FILE_MAX_BYTES = 10 * 1024 * 1024
+
 function fileHasAllowedExt(f) {
     if (!f || !f.name) return false
     const n = String(f.name || '').toLowerCase()
     return ALLOWED_IMAGE_EXTS.some(ext => n.endsWith(ext))
+}
+function fileTooLarge(f) {
+    if (!f || typeof f.size !== 'number') return false
+    return f.size > FILE_MAX_BYTES
 }
 
 const EDITPROFILENAME_FORBIDDEN_RE = /[\x00-\x20\x7F\\\$\[\]]/
@@ -40,7 +46,13 @@ if (avatar) avatar.addEventListener('change', () => {
         imgShown.removeAttribute('src')
         return
     }
-    // valid -> preview and clear errors
+    if (fileTooLarge(f)) {
+        if (msg) msg.innerHTML = "❌ Avatar exceeds 10MB. Choose a smaller file."
+        if (submitInput) submitInput.disabled = true
+        imgShown.removeAttribute('src')
+        return
+    }
+
     const data = new FormData(form)
     const newAvatar = URL.createObjectURL(data.get("avatar"))
     imgShown.setAttribute("src", newAvatar)
@@ -58,7 +70,12 @@ if (form) {
             if (submitInput) submitInput.disabled = true
             return
         }
-
+        if (sel && fileTooLarge(sel)) {
+            e.preventDefault()
+            if (msg) msg.innerHTML = "❌ Avatar exceeds 10MB. Choose a smaller file."
+            if (submitInput) submitInput.disabled = true
+            return
+        }
         const rawName = name ? String(name.value || '') : ''
         const rawDesc = desc ? String(desc.value || '') : ''
         if (EDITPROFILENAME_FORBIDDEN_RE.test(rawName) || EDITPROFILEDESC_FORBIDDEN_RE.test(rawDesc)) {

@@ -30,9 +30,22 @@ function imageFileFilter(req, file, cb) {
     }
 }
 
-const upload = multer({ storage: storage, fileFilter: imageFileFilter })
+const FILE_MAX_BYTES = 10 * 1024 * 1024
+const upload = multer({ storage: storage, fileFilter: imageFileFilter, limits: { fileSize: FILE_MAX_BYTES } })
 
-router.post("/new/:restoId", upload.array("rv-images", maxuploads), async (req, res) => {
+// wrap multer so we can return 400 on invalid files / too large
+router.post("/new/:restoId", (req, res, next) => {
+    upload.array("rv-images", maxuploads)(req, res, (err) => {
+        if (err) {
+            console.log(`Review image upload error: ${err && err.code ? err.code : err.message}`)
+            if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.status(400).send("One or more images exceed the 10MB limit.")
+            }
+            return res.status(400).send("Invalid image upload.")
+        }
+        next()
+    })
+}, async (req, res) => {
     try {
         if (!req.isAuthenticated()) {
             res.redirect("/error?errorMsg=User not logged in.")

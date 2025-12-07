@@ -11,12 +11,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const label = document.getElementById("cr-upload-text")
     const icon = document.getElementsByClassName("cr-img-i")[0]
 
+    const FILE_MAX_BYTES = 10 * 1024 * 1024
     const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
 
     function fileHasAllowedExt(f) {
         if (!f || !f.name) return false
         const name = String(f.name || '').toLowerCase()
         return ALLOWED_IMAGE_EXTS.some(ext => name.endsWith(ext))
+    }
+    function fileTooLarge(f) {
+        if (!f || typeof f.size !== 'number') return false
+        return f.size > FILE_MAX_BYTES
     }
 
     const orForm = document.getElementById('or-form')
@@ -212,16 +217,24 @@ document.addEventListener('DOMContentLoaded', function () {
         // validate extensions
         for (let i = 0; i < numImages; i++) {
             const f = file.files[i]
-           if (!fileHasAllowedExt(f)) {
+            if (!fileHasAllowedExt(f)) {
                 label.innerText = "INVALID FILE"
                 label.style.color = "var(--col-error)"
                 if (button) button.disabled = true
                 showReviewError('❌ Invalid image type. Allowed: .jpg, .png, .gif, .jfif, .webp, .jpeg')
                 return
             }
+            if (fileTooLarge(f)) {
+                label.innerText = "FILE TOO LARGE"
+                label.style.color = "var(--col-error)"
+                if (button) button.disabled = true
+                showReviewError('❌ One or more images exceed 10MB. Remove them before submitting.')
+                return
+            }
         }
         // clear any previous file-type error
         clearReviewError()
+        if (button) button.disabled = false
 
         label.innerText = numImages + " IMGS"
 

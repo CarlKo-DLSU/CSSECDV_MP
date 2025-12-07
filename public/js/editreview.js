@@ -21,10 +21,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const oldImages = label ? parseInt(label.getAttribute("data-oldImages") || "0", 10) : 0
 
     const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+    const FILE_MAX_BYTES = 10 * 1024 * 1024
+    
     function fileHasAllowedExt(f) {
         if (!f || !f.name) return false
         const name = String(f.name || '').toLowerCase()
         return ALLOWED_IMAGE_EXTS.some(ext => name.endsWith(ext))
+    }
+    function fileTooLarge(f) {
+        if (!f || typeof f.size !== 'number') return false
+        return f.size > FILE_MAX_BYTES
     }
 
     if (title) title.setAttribute('maxlength', String(TITLE_MAX))
@@ -135,6 +141,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function validateReviewContent(e) {
         e.preventDefault()
+        if (file && file.files && file.files.length > 0) {
+           for (let i = 0; i < file.files.length; i++) {
+                if (fileTooLarge(file.files[i])) {
+                    showEditError('❌ One or more images exceed 10MB. Remove them before saving.')
+                    if (saveInput) saveInput.disabled = true
+                    return
+                }
+            }
+        }
         // block submission if invalid chars present
         if (EDIT_REVIEW_FORBIDDEN_RE.test(String(title ? title.value : '')) || EDIT_REVIEW_FORBIDDEN_RE.test(String(content ? content.value : ''))) {
             showEditError('❌ Submission blocked: invalid characters detected.')
@@ -182,6 +197,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 label.innerText = "INVALID FILE"
                 label.style.color = "var(--col-error)"
                 showEditError('❌ Invalid image type. Allowed: .jpg, .png, .gif, .jfif, .webp, .jpeg')
+                if (saveInput) saveInput.disabled = true
+                return
+            }
+            if (fileTooLarge(f)) {
+                label.innerText = "FILE TOO LARGE"
+                label.style.color = "var(--col-error)"
+                showEditError('❌ One or more images exceed 10MB. Remove them before saving.')
                 if (saveInput) saveInput.disabled = true
                 return
             }
