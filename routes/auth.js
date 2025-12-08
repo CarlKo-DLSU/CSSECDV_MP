@@ -7,9 +7,13 @@ const passport = require('passport');
 const checkAuthenticate = require('../utility/checkauthenticate');
 const Profile = require('../database/models/Profile');
 const LoginAttempt = require('../database/models/LoginAttempt');
+const IpAttempt = require('../database/models/IpAttempt'); // new
 
 const LOCK_THRESHOLD = 5
 const LOCK_MS = 5 * 60 * 1000 // 5 minutes
+
+const IP_LOCK_THRESHOLD = 20
+const IP_LOCK_MS = 5 * 60 * 1000 // 5 minutes
 
 // Limits / constants
 const USERNAME_MIN = 1
@@ -60,14 +64,35 @@ function containsRawInvalidChars(raw) {
     return false
 }
 
-async function recordFailedAttempt(username, failureType = 'Invalid Credentials') {
+async function recordFailedAttempt(username, failureType = 'Invalid Credentials', ip = 'unknown') {
     const uname = String(username || '').trim()
-    if (uname.length === 0) return { locked: false, la: null }
+    const ipSafe = String(ip || 'unknown')
+
+    // increment IP attempt (unless ip is literally 'unknown')
+    try {
+        if (ipSafe !== 'unknown') {
+           const ipRec = await IpAttempt.increment(ipSafe)
+            // if threshold reached and not currently blacklisted, set blacklist and return immediately
+            if (ipRec.attempts >= IP_LOCK_THRESHOLD && (!ipRec.blacklistUntil || ipRec.blacklistUntil < Date.now())) {
+                ipRec.blacklistUntil = new Date(Date.now() + IP_LOCK_MS)
+                ipRec.attempts = 0
+                await ipRec.save()
+                try { console.info(`[auth] ip blacklisted ip="${ipSafe}" until=${ipRec.blacklistUntil.toISOString()}`) } catch (e) {}
+                // stop further per-username processing for this request
+                return { locked: false, la: null, ipBlacklisted: true, ipRec }
+            }
+        }
+    } catch (e) {
+        // ignore DB logging errors for IP tracking
+    }
+
+    if (uname.length === 0) return { locked: false, la: null, ipBlacklisted: false }
 
     const userExists = await Profile.exists({ name: uname })
     if (!userExists) {
-        // don't create LoginAttempt or log for unknown usernames
-        return { locked: false, la: null }
+        // log attempts that use non-existent usernames (no LoginAttempt document created)
+        try { console.info(`[auth] failed login attempt for non-existent username="${uname}" ip=${ipSafe} type="Non-existent username"`) } catch (e) {}
+        return { locked: false, la: null, ipBlacklisted: false }
     }
 
     const update = {
@@ -82,7 +107,7 @@ async function recordFailedAttempt(username, failureType = 'Invalid Credentials'
     )
 
     try {
-        console.info(`[auth] failed login attempt for username="${uname}" type="${failureType}"`)
+        console.info(`[auth] failed login attempt for username="${uname}" ip=${ipSafe} type="${failureType}"`)
     } catch (e) { /* ignore logging errors */ }
 
     // if threshold reached and not currently locked, set lock and reset attempts
@@ -90,9 +115,9 @@ async function recordFailedAttempt(username, failureType = 'Invalid Credentials'
         la.lockUntil = new Date(Date.now() + LOCK_MS)
         la.attempts = 0
         await la.save()
-        return { locked: true, la }
+        return { locked: true, la, ipBlacklisted: false }
     }
-    return { locked: false, la }
+    return { locked: false, la, ipBlacklisted: false }
 }
 
 async function clearAttempts(username) {
@@ -252,7 +277,7 @@ router.post('/recovery_setup', async (req, res) => {
                     recoveryAnswerHash: answerHash,
                     createdAt: new Date()
                 })
-                try { console.info(`[auth] account created username="${safeName}"`) } catch (e) {}
+                try { console.info(`[auth] account created username="${safeName}" ip=${req.ip}`) } catch (e) {}
                 await profile.save()
             } catch (e) {
                 // handle duplicate-name race or validation error
@@ -288,7 +313,13 @@ router.post('/recovery_setup', async (req, res) => {
 // login route unchanged (keeps existing lock logic)
 router.post('/login', async (req, res, next) => {
     const username = String(req.body.username || '').trim()
+    const ip = req.ip
     try {
+        const ipRec = await IpAttempt.findOne({ ip })
+        if (ipRec && ipRec.blacklistUntil && ipRec.blacklistUntil > Date.now()) {
+            return res.redirect(`/error?errorMsg=${encodeURIComponent('Too many failed attempts from your IP. Try again later.')}`)
+        }
+
         // If there is a username-level lock (from LoginAttempt), refuse early
         const la = await LoginAttempt.findOne({ username })
         if (la && la.lockUntil && la.lockUntil > Date.now()) {
@@ -299,7 +330,13 @@ router.post('/login', async (req, res, next) => {
             if (err) return next(err);
 
             if (!user) {
-                const { locked: laLocked, la } = await recordFailedAttempt(username, 'Wrong Password')
+                const { locked: laLocked, la, ipBlacklisted } = await recordFailedAttempt(username, 'Wrong Password', ip)
+
+                if (ipBlacklisted) {
+                    // IP was just blacklisted by this attempt; block further processing and respond
+                    try { console.info(`[auth] blocked login attempt from newly blacklisted ip="${ip}"`) } catch (e) {}
+                    return res.redirect(`/error?errorMsg=${encodeURIComponent('Too many failed attempts from your IP. Try again later.')}`)
+                }
 
                 // if an actual Profile exists, also increment its counters for monitoring
                 const userRecord = await query.getProfile({ name: username })
@@ -323,11 +360,11 @@ router.post('/login', async (req, res, next) => {
 
                 // Log the lock event once, preferring the profile-level lock entry (mentions account name)
                 if (profileLocked && updatedProfile) {
-                    try { console.info(`[auth] account locked for username="${updatedProfile.name}" until=${updatedProfile.lockUntil.toISOString()}`) } catch (e) {}
+                    try { console.info(`[auth] account locked for username="${updatedProfile.name}" until=${updatedProfile.lockUntil.toISOString()} ip=${req.ip}`) } catch (e) {}
                     return res.redirect(`/error?errorMsg=${encodeURIComponent('Please try again in a few minutes.')}`);
                 }
                 if (laLocked && la) {
-                    try { console.info(`[auth] username-level lock applied for username="${la.username}" until=${la.lockUntil.toISOString()}`) } catch (e) {}
+                    try { console.info(`[auth] username-level lock applied for username="${la.username}" until=${la.lockUntil.toISOString()} ip=${req.ip}`) } catch (e) {}
                     return res.redirect(`/error?errorMsg=${encodeURIComponent('Please try again in a few minutes.')}`);
                 }
 
@@ -340,7 +377,7 @@ router.post('/login', async (req, res, next) => {
 
             req.login(user, (loginErr) => {
                 if (loginErr) return next(loginErr);
-                try { console.info(`[auth] successful login for username="${username}"`) } catch (e) {}
+                try { console.info(`[auth] successful login for username="${username}" ip=${req.ip}`) } catch (e) {}
                 if (req.body.rememberMe) {
                     req.session.cookie.maxAge = 1814400000;
                 }
@@ -352,17 +389,26 @@ router.post('/login', async (req, res, next) => {
     }
 })
 
-// validatecredentials, logout and recovery_account routes: apply strict checks where appropriate
-
 router.post('/validatecredentials', async (req, res) => {
     const username = String(req.body.username || '').trim()
     const password = req.body.password
+    const ip = req.ip
+
+    const ipRec = await IpAttempt.findOne({ ip })
+    if (ipRec && ipRec.blacklistUntil && ipRec.blacklistUntil > Date.now()) {
+        return res.status(423).send("Too many failed attempts from your IP. Try again later.")
+    }
 
     if (containsRawInvalidChars(username) || !isString(password)) {
+        // still record IP attempt (username might exist) - call recordFailedAttempt with ip
+        const r = await recordFailedAttempt(username, 'Invalid Credentials', ip)
+        if (r && r.ipBlacklisted) return res.status(423).send("Too many failed attempts from your IP. Try again later.")
         return res.status(400).send("Bad Credentials")
     }
 
     if (!isValidUsername(username) || !isString(password)) {
+       const r = await recordFailedAttempt(username, 'Invalid Credentials', ip)
+        if (r && r.ipBlacklisted) return res.status(423).send("Too many failed attempts from your IP. Try again later.")
         return res.status(400).send("Bad Credentials")
     }
 
@@ -377,7 +423,8 @@ router.post('/validatecredentials', async (req, res) => {
 
     if (!user) {
         // record failed attempt for unknown username
-        const { locked } = await recordFailedAttempt(username, 'Invalid Credentials')
+        const { locked, ipBlacklisted } = await recordFailedAttempt(username, 'Invalid Credentials', req.ip)
+        if (ipBlacklisted) return res.status(423).send("Too many failed attempts from your IP. Try again later.")
         if (locked) {
             return res.status(423).send("Too many failed attempts. Account locked for 5 minutes.");
         }
@@ -402,7 +449,8 @@ router.post('/validatecredentials', async (req, res) => {
             });
             res.status(200).send("Success!");
         } else {
-            const { locked: laLocked, la } = await recordFailedAttempt(username, 'Wrong Password')
+            const { locked: laLocked, la, ipBlacklisted } = await recordFailedAttempt(username, 'Wrong Password', req.ip)
+            if (ipBlacklisted) return res.status(423).send("Too many failed attempts from your IP. Try again later.")
 
             const newAttempts = (user.failedLoginAttempts || 0) + 1;
             const update = { lastLoginAttempt: new Date() };
@@ -420,11 +468,11 @@ router.post('/validatecredentials', async (req, res) => {
 
             // Log the lock event once, preferring profile-level entry
             if (profileLocked && updatedProfile) {
-                try { console.info(`[auth] account locked for username="${updatedProfile.name}" until=${updatedProfile.lockUntil.toISOString()}`) } catch (e) {}
+                try { console.info(`[auth] account locked for username="${updatedProfile.name}" until=${updatedProfile.lockUntil.toISOString()} ip=${req.ip}`) } catch (e) {}
                 return res.status(423).send("Too many failed attempts. Account locked for 5 minutes.");
             }
             if (laLocked && la) {
-                try { console.info(`[auth] username-level lock applied for username="${la.username}" until=${la.lockUntil.toISOString()}`) } catch (e) {}
+                try { console.info(`[auth] username-level lock applied for username="${la.username}" until=${la.lockUntil.toISOString()} ip=${req.ip}`) } catch (e) {}
                 return res.status(423).send("Too many failed attempts. Account locked for 5 minutes.");
             }
 
@@ -437,12 +485,13 @@ router.post('/validatecredentials', async (req, res) => {
 
 router.get('/logout', (req, res) => {
     const username = req.user && (req.user.name || req.user.username) ? (req.user.name || req.user.username) : null
+    const ip = req.ip
     req.logout((err) => {
         if (err) {
-            try { console.error(`[auth] logout error for username="${username || 'unknown'}": ${err && err.message ? err.message : err}`) } catch (e) {}
+            try { console.error(`[auth] logout error for username="${username || 'unknown'}" ip=${ip}: ${err && err.message ? err.message : err}`) } catch (e) {}
             return res.redirect('/error?errorMsg=Failed to logout.')
         }
-        try { console.info(`[auth] logout username="${username || 'unknown'}"`) } catch (e) {}
+        try { console.info(`[auth] logout username="${username || 'unknown'}" ip=${ip}`) } catch (e) {}
         return res.clearCookie("restaurantReviewsCookie").redirect('/')
     })
 })
