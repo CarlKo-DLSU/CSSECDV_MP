@@ -20,9 +20,9 @@ const normalIcon = "-40px -80px";
 const errorIcon = "-60px -80px";
 
 // defensive constants (mirror server)
-const USERNAME_MAX = 30
+const USERNAME_MAX = 31
 const PASSWORD_MIN = 8
-const PASSWORD_MAX = 128
+const PASSWORD_MAX = 31
 // use a file-unique name to avoid global redeclaration collisions with other client scripts
 const LOGIN_FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
 
@@ -60,7 +60,11 @@ if (regUsername) {
             return
         }
         // reject raw input that contains forbidden chars or has leading/trailing whitespace
-        if (LOGIN_FORBIDDEN_RE.test(raw) || raw !== raw.trim() || username.length > USERNAME_MAX) {
+        if (username.length == USERNAME_MAX) {
+            regAlr.textContent = `❌ Username must be ${USERNAME_MAX-1} characters or less.`
+            return
+        }
+        if (LOGIN_FORBIDDEN_RE.test(raw) || raw !== raw.trim()) {
             regAlr.textContent = "❌ Invalid username."
             return
         }
@@ -315,14 +319,40 @@ function logValidateContent(e) {
 }
 
 function validateRegPassword() {
-    const pwd = (regPassword && regPassword.value || "").trim()
+    const rawPwd = (regPassword && regPassword.value) || ""
+    const pwd = rawPwd.trim()
     const conf = (regConPassword && regConPassword.value || "").trim()
-    const lengthOk = pwd.length >= PASSWORD_MIN && pwd.length <= PASSWORD_MAX
     const numberOk = /[0-9]/.test(pwd)
     const specialOk = /[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(pwd)
 
-    if (!lengthOk || !numberOk || !specialOk || LOGIN_FORBIDDEN_RE.test(pwd)) {
-        if (regCon) regCon.textContent = "❌ Password must be at least 8 characters and include a number and a special character (excluding \\ and \$)"
+    // Check password length constraints first with specific messages
+    if (rawPwd.length < PASSWORD_MIN) {
+        if (regCon) regCon.textContent = `❌ Password must be at least ${PASSWORD_MIN} characters long.`
+        if (regPassword) regPassword.classList.add("required-error")
+        return false
+    }
+
+    if (rawPwd.length == PASSWORD_MAX) {
+        if (regCon) regCon.textContent = `❌ Password must be ${PASSWORD_MAX-1} characters or less.`
+        if (regPassword) regPassword.classList.add("required-error")
+        return false
+    }
+
+    // Check for required character types
+    if (!numberOk) {
+        if (regCon) regCon.textContent = "❌ Password must include at least one number."
+        if (regPassword) regPassword.classList.add("required-error")
+        return false
+    }
+
+    if (!specialOk) {
+        if (regCon) regCon.textContent = "❌ Password must include at least one special character."
+        if (regPassword) regPassword.classList.add("required-error")
+        return false
+    }
+
+    if (LOGIN_FORBIDDEN_RE.test(pwd)) {
+        if (regCon) regCon.textContent = "❌ Password contains invalid characters (\\ and $ not allowed)"
         if (regPassword) regPassword.classList.add("required-error")
         return false
     }

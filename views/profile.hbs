@@ -32,20 +32,24 @@
 
             <div class="admin-menu">
                 <!-- Create new manager -->
-                <form method="POST" action="/admin/create" class="admin-form">
+                <form method="POST" action="/admin/create" class="admin-form" id="admin-create-manager-form">
                     <h4>Create New Manager</h4>
                     <input type="hidden" name="role" value="manager">
-                    <label>Username: <input name="username" type="text" required minlength="1" maxlength="30"></label>
-                    <label>Password: <input name="password" type="password" required minlength="8" maxlength="128"></label>
+                    <label>Username: <input name="username" type="text" required minlength="1" maxlength="30" class="admin-username-input"></label>
+                    <p class="admin-err admin-username-err" aria-live="polite"></p>
+                    <label>Password: <input name="password" type="password" required minlength="8" maxlength="128" class="admin-password-input"></label>
+                    <p class="admin-err admin-password-err" aria-live="polite"></p>
                     <button type="submit" class="admin-btn">Create Manager</button>
                 </form>
 
                 <!-- Create new admin -->
-                <form method="POST" action="/admin/create" class="admin-form">
+                <form method="POST" action="/admin/create" class="admin-form" id="admin-create-admin-form">
                     <h4>Create New Admin</h4>
                     <input type="hidden" name="role" value="admin">
-                    <label>Username: <input name="username" type="text" required minlength="1" maxlength="30"></label>
-                    <label>Password: <input name="password" type="password" required minlength="8" maxlength="128"></label>
+                    <label>Username: <input name="username" type="text" required minlength="1" maxlength="30" class="admin-username-input"></label>
+                    <p class="admin-err admin-username-err" aria-live="polite"></p>
+                    <label>Password: <input name="password" type="password" required minlength="8" maxlength="128" class="admin-password-input"></label>
+                    <p class="admin-err admin-password-err" aria-live="polite"></p>
                     <button type="submit" class="admin-btn">Create Admin</button>
                 </form>
 
@@ -99,7 +103,7 @@
 
             <div class="manager-menu">
                 <!-- Edit user description -->
-                <form method="POST" action="/manager/assign-reviewer-role" class="manager-form" onsubmit="return confirm('Update this user?');">
+                <form method="POST" action="/manager/assign-reviewer-role" class="manager-form" id="manager-edit-user-form" onsubmit="return confirm('Update this user?');">
                     <h4>Edit User</h4>
                     <label>Select User:
                         <select name="username" required>
@@ -111,7 +115,8 @@
                             {{/each}}
                         </select>
                     </label>
-                    <label>Description: <textarea name="description" maxlength="500" rows="3" placeholder="Update user description..."></textarea></label>
+                    <label>Description: <textarea name="description" class="manager-description-input" maxlength="300" rows="3" placeholder="Update user description..."></textarea></label>
+                    <p class="manager-description-err admin-err" aria-live="polite" style="color: #c00;"></p>
                     <button type="submit" class="manager-btn">Update User</button>
                 </form>
 
@@ -132,7 +137,7 @@
                 </form>
 
                 <!-- Add restaurant -->
-                <form method="POST" action="/manager/add-restaurant" class="manager-form">
+                <form method="POST" action="/manager/add-restaurant" class="manager-form" id="manager-add-restaurant-form">
                     <h4>Add Restaurant</h4>
                     <label>Restaurant Name: <input name="name" type="text" required maxlength="100"></label>
                     <label>Owner: 
@@ -145,7 +150,8 @@
                             {{/each}}
                         </select>
                     </label>
-                    <label>Description: <textarea name="description" maxlength="500" rows="2" placeholder="Restaurant description..."></textarea></label>
+                    <label>Description: <textarea name="description" class="manager-description-input" maxlength="300" rows="2" placeholder="Restaurant description..."></textarea></label>
+                    <p class="manager-description-err admin-err" aria-live="polite" style="color: #c00;"></p>
                     <button type="submit" class="manager-btn">Add Restaurant</button>
                 </form>
 

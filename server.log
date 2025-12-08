@@ -641,3 +641,188 @@
 [2025-12-08T05:53:30.306Z] [LOG] ROUTE -> resto: Nuka-Cola Cafeteria
 [2025-12-08T05:53:45.396Z] [LOG] ROUTE -> EDIT REVIEW (great atmosphere)
 [2025-12-08T05:53:48.300Z] [LOG] ROUTE -> resto: Nuka-Cola Cafeteria
+[2025-12-08T15:42:46.467Z] [LOG] SERVER IS UP!
+[2025-12-08T15:43:51.904Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: Bob123
+[2025-12-08T15:56:25.785Z] [LOG] SERVER IS UP!
+[2025-12-08T15:56:37.497Z] [LOG] SERVER IS UP!
+[2025-12-08T15:58:54.169Z] [LOG] SERVER IS UP!
+[2025-12-08T15:59:02.850Z] [LOG] SERVER IS UP!
+[2025-12-08T16:00:16.225Z] [LOG] SERVER IS UP!
+[2025-12-08T16:00:53.621Z] [LOG] SERVER IS UP!
+[2025-12-08T16:07:08.260Z] [LOG] SERVER IS UP!
+[2025-12-08T16:13:16.851Z] [LOG] SERVER IS UP!
+[2025-12-08T16:13:32.967Z] [LOG] SERVER IS UP!
+[2025-12-08T16:14:08.966Z] [LOG] SERVER IS UP!
+[2025-12-08T16:14:10.550Z] [LOG] SERVER IS UP!
+[2025-12-08T16:14:12.064Z] [LOG] SERVER IS UP!
+[2025-12-08T16:20:45.695Z] [LOG] SERVER IS UP!
+[2025-12-08T16:21:25.606Z] [LOG] SERVER IS UP!
+[2025-12-08T16:23:06.125Z] [LOG] SERVER IS UP!
+[2025-12-08T16:23:29.293Z] [LOG] SERVER IS UP!
+[2025-12-08T16:28:02.011Z] [LOG] SERVER IS UP!
+[2025-12-08T16:28:23.042Z] [LOG] SERVER IS UP!
+[2025-12-08T16:29:34.122Z] [LOG] SERVER IS UP!
+[2025-12-08T16:31:06.725Z] [LOG] SERVER IS UP!
+[2025-12-08T16:31:07.993Z] [LOG] SERVER IS UP!
+[2025-12-08T16:31:27.693Z] [LOG] SERVER IS UP!
+[2025-12-08T16:31:39.610Z] [LOG] SERVER IS UP!
+[2025-12-08T16:33:20.874Z] [LOG] SERVER IS UP!
+[2025-12-08T16:33:31.679Z] [LOG] SERVER IS UP!
+[2025-12-08T16:33:33.626Z] [LOG] SERVER IS UP!
+[2025-12-08T16:34:00.497Z] [LOG] SERVER IS UP!
+[2025-12-08T16:34:15.200Z] [LOG] SERVER IS UP!
+[2025-12-08T16:34:31.763Z] [LOG] SERVER IS UP!
+[2025-12-08T16:35:19.121Z] [LOG] SERVER IS UP!
+[2025-12-08T16:35:39.969Z] [LOG] SERVER IS UP!
+[2025-12-08T16:35:53.926Z] [LOG] SERVER IS UP!
+[2025-12-08T16:35:58.928Z] [LOG] SERVER IS UP!
+[2025-12-08T16:36:03.342Z] [LOG] SERVER IS UP!
+[2025-12-08T16:38:24.386Z] [LOG] SERVER IS UP!
+[2025-12-08T16:47:42.915Z] [LOG] SERVER IS UP!
+[2025-12-08T16:48:10.338Z] [LOG] SERVER IS UP!
+[2025-12-08T16:49:23.243Z] [LOG] SERVER IS UP!
+[2025-12-08T16:50:09.155Z] [LOG] SERVER IS UP!
+[2025-12-08T16:50:25.621Z] [LOG] SERVER IS UP!
+[2025-12-08T16:50:33.631Z] [LOG] SERVER IS UP!
+[2025-12-08T16:51:48.058Z] [LOG] SERVER IS UP!
+[2025-12-08T16:55:21.806Z] [LOG] SERVER IS UP!
+[2025-12-08T16:56:10.869Z] [LOG] SERVER IS UP!
+[2025-12-08T16:58:29.422Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: Bob123
+[2025-12-08T16:58:40.657Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: Bob123
+[2025-12-08T16:59:03.514Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: Bob123
+[2025-12-08T16:59:10.140Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: Bob123
+[2025-12-08T16:59:23.314Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: Bob123
+[2025-12-08T17:00:03.854Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: Bob123
+[2025-12-08T17:01:05.497Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: test
+[2025-12-08T17:01:07.919Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: test
+[2025-12-08T17:03:48.981Z] [LOG] SERVER IS UP!
+[2025-12-08T17:03:57.595Z] [LOG] SERVER IS UP!
+[2025-12-08T17:04:46.620Z] [LOG] SERVER IS UP!
+[2025-12-08T17:04:53.212Z] [LOG] SERVER IS UP!
+[2025-12-08T17:04:57.019Z] [LOG] [RECOVERY] FAIL - User: test, Reason: Recovery question does not match
+[2025-12-08T17:05:24.250Z] [LOG] [RECOVERY] FAIL - User: test, Reason: Recovery question does not match
+[2025-12-08T17:05:24.616Z] [LOG] [RECOVERY] FAIL - User: test, Reason: Recovery question does not match
+[2025-12-08T17:05:24.978Z] [LOG] [RECOVERY] FAIL - User: test, Reason: Recovery question does not match
+[2025-12-08T17:05:53.895Z] [LOG] [RECOVERY] FAIL - User: test, Question: What is the name of a childhood friend that no one else would know?, Reason: Incorrect answer
+[2025-12-08T17:06:10.063Z] [LOG] [RECOVERY] SUCCESS - User: test, Question: What is the name of a childhood friend that no one else would know?, Answer verified successfully
+[2025-12-08T17:06:50.764Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: test
+[2025-12-08T17:11:31.169Z] [LOG] SERVER IS UP!
+[2025-12-08T17:13:58.350Z] [LOG] SERVER IS UP!
+[2025-12-08T17:14:00.165Z] [LOG] SERVER IS UP!
+[2025-12-08T17:14:27.943Z] [LOG] SERVER IS UP!
+[2025-12-08T17:14:31.625Z] [LOG] SERVER IS UP!
+[2025-12-08T17:14:58.277Z] [LOG] SERVER IS UP!
+[2025-12-08T17:15:06.401Z] [LOG] SERVER IS UP!
+[2025-12-08T17:16:23.457Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: test2
+[2025-12-08T17:16:47.063Z] [LOG] [RECOVERY] FAIL - User: test2d, Reason: User not found
+[2025-12-08T17:16:57.309Z] [LOG] [RECOVERY] FAIL - User: test2, Question: What is/was the name of your first pet?, Reason: Incorrect answer
+[2025-12-08T17:17:02.286Z] [LOG] [RECOVERY] FAIL - User: test2, Reason: Recovery question does not match
+[2025-12-08T17:17:26.600Z] [LOG] [RECOVERY] SUCCESS - User: test2, Question: What is/was the name of your first pet?, Answer verified successfully
+[2025-12-08T17:17:51.775Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:17:51.781Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:18:55.586Z] [LOG] Admin admin created new manager account: dfasdfasdfasdf
+[2025-12-08T17:18:55.612Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:18:55.618Z] [LOG] [DEBUG] Fetched 15 users and 6 restaurants
+[2025-12-08T17:19:20.358Z] [LOG] SERVER IS UP!
+[2025-12-08T17:20:34.199Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:20:34.211Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:27:29.623Z] [LOG] SERVER IS UP!
+[2025-12-08T17:28:16.860Z] [LOG] SERVER IS UP!
+[2025-12-08T17:28:44.303Z] [LOG] SERVER IS UP!
+[2025-12-08T17:28:45.347Z] [LOG] SERVER IS UP!
+[2025-12-08T17:36:43.795Z] [LOG] SERVER IS UP!
+[2025-12-08T17:36:51.962Z] [LOG] SERVER IS UP!
+[2025-12-08T17:36:53.541Z] [LOG] SERVER IS UP!
+[2025-12-08T17:36:55.340Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:36:55.351Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:39:12.273Z] [LOG] SERVER IS UP!
+[2025-12-08T17:39:45.285Z] [LOG] SERVER IS UP!
+[2025-12-08T17:39:45.367Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:39:45.379Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:40:18.072Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:40:18.078Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:40:30.728Z] [LOG] SERVER IS UP!
+[2025-12-08T17:40:37.692Z] [LOG] SERVER IS UP!
+[2025-12-08T17:40:38.249Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:40:38.263Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:42:11.843Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:42:11.850Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:42:32.456Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:42:32.462Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:43:32.200Z] [LOG] SERVER IS UP!
+[2025-12-08T17:43:32.284Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:43:32.304Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:45:32.294Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:45:32.301Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:46:39.872Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:46:39.877Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:47:29.782Z] [LOG] [ADMIN] CREATE SUCCESS - Admin: admin, Created: admin account for askldjfalksdjflsakdjflkasdjflk
+[2025-12-08T17:47:29.798Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:47:29.802Z] [LOG] [DEBUG] Fetched 15 users and 6 restaurants
+[2025-12-08T17:47:50.102Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:47:50.107Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:48:07.259Z] [LOG] SERVER IS UP!
+[2025-12-08T17:48:07.458Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:48:07.472Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:48:16.144Z] [LOG] SERVER IS UP!
+[2025-12-08T17:48:28.387Z] [LOG] SERVER IS UP!
+[2025-12-08T17:48:28.458Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:48:28.472Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:48:35.841Z] [LOG] SERVER IS UP!
+[2025-12-08T17:50:21.659Z] [LOG] SERVER IS UP!
+[2025-12-08T17:50:29.104Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:50:29.111Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:51:08.591Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:51:08.595Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:54:34.791Z] [LOG] SERVER IS UP!
+[2025-12-08T17:54:44.376Z] [LOG] SERVER IS UP!
+[2025-12-08T17:54:56.754Z] [LOG] SERVER IS UP!
+[2025-12-08T17:55:27.964Z] [LOG] SERVER IS UP!
+[2025-12-08T17:55:32.309Z] [LOG] SERVER IS UP!
+[2025-12-08T17:55:33.382Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:55:33.395Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T17:56:00.636Z] [LOG] SERVER IS UP!
+[2025-12-08T17:56:03.764Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T17:56:03.777Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:00:43.348Z] [LOG] SERVER IS UP!
+[2025-12-08T18:00:54.211Z] [LOG] SERVER IS UP!
+[2025-12-08T18:00:56.482Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T18:00:56.496Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:01:13.571Z] [LOG] SERVER IS UP!
+[2025-12-08T18:03:33.689Z] [LOG] SERVER IS UP!
+[2025-12-08T18:03:39.582Z] [LOG] SERVER IS UP!
+[2025-12-08T18:03:45.287Z] [LOG] SERVER IS UP!
+[2025-12-08T18:05:27.821Z] [LOG] SERVER IS UP!
+[2025-12-08T18:10:30.329Z] [LOG] SERVER IS UP!
+[2025-12-08T18:10:42.266Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T18:10:42.272Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:11:15.248Z] [LOG] [ADMIN] CREATE FAIL - Username: asldfjasldkfjlkasdfjlkasdjflksa, Reason: Invalid username format
+[2025-12-08T18:11:18.945Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T18:11:18.950Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:11:28.595Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T18:11:28.599Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:15:08.388Z] [LOG] SERVER IS UP!
+[2025-12-08T18:17:33.483Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: lksdfjlkasjdfklasdljfkasjkldfj
+[2025-12-08T18:17:36.694Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: lksdfjlkasjdfklasdljfkasjkldfj
+[2025-12-08T18:18:23.687Z] [LOG] [DEBUG] User not authenticated or not admin/manager. req.user: lksdfjlkasjdfklasdljfkasjkldfj
+[2025-12-08T18:18:31.788Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T18:18:31.793Z] [LOG] [DEBUG] Fetched 15 users and 6 restaurants
+[2025-12-08T18:18:35.945Z] [LOG] [ADMIN] DELETE SUCCESS - Admin: admin, Deleted user: lksdfjlkasjdfklasdljfkasjkldfj (reviewer)
+[2025-12-08T18:18:35.959Z] [LOG] [DEBUG] User admin (role: admin) - Fetching users and restaurants
+[2025-12-08T18:18:35.962Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:19:11.212Z] [LOG] SERVER IS UP!
+[2025-12-08T18:19:57.812Z] [LOG] [DEBUG] User manager (role: manager) - Fetching users and restaurants
+[2025-12-08T18:19:57.819Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:22:33.742Z] [LOG] SERVER IS UP!
+[2025-12-08T18:22:57.185Z] [LOG] [RECOVERY] FAIL - User: test, Question: What is the name of a childhood friend that no one else would know?, Reason: Incorrect answer
+[2025-12-08T18:23:28.554Z] [LOG] [RECOVERY] FAIL - User: test, Reason: Recovery question does not match
+[2025-12-08T18:23:36.874Z] [LOG] [RECOVERY] SUCCESS - User: test, Question: What is the name of a childhood friend that no one else would know?, Answer verified successfully
+[2025-12-08T18:25:03.230Z] [LOG] SERVER IS UP!
+[2025-12-08T18:25:39.067Z] [LOG] [DEBUG] User manager (role: manager) - Fetching users and restaurants
+[2025-12-08T18:25:39.073Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:25:45.844Z] [LOG] manager manager edited description for anonymous
+[2025-12-08T18:25:45.856Z] [LOG] [DEBUG] User manager (role: manager) - Fetching users and restaurants
+[2025-12-08T18:25:45.861Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants
+[2025-12-08T18:26:21.862Z] [LOG] manager manager edited description for anonymous
+[2025-12-08T18:26:21.883Z] [LOG] [DEBUG] User manager (role: manager) - Fetching users and restaurants
+[2025-12-08T18:26:21.890Z] [LOG] [DEBUG] Fetched 14 users and 6 restaurants

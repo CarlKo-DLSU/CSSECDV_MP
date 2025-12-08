@@ -2,7 +2,7 @@ console.log('recovery_setup.js loaded');
 
 document.addEventListener('DOMContentLoaded', function () {
     (function () {
-        const ANSWER_MAX = 50
+        const ANSWER_MAX = 51
         const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
         const TIMEOUT = 10000
 
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (!qVal) { showError('❌ Please select a recovery question.'); question && question.focus(); return }
             if (!aVal) { showError('❌ Please provide an answer.'); answer && answer.focus(); return }
-            if (aVal.length > ANSWER_MAX) { showError('❌ Answer is too long.'); answer && answer.focus(); return }
+            if (aVal.length == ANSWER_MAX) { showError('❌ Answer is too long.'); answer && answer.focus(); return }
             if (FORBIDDEN_RE.test(aRaw)) { showError('❌ Answer contains invalid characters.'); answer && answer.focus(); return }
 
             submitBtn && (submitBtn.disabled = true)

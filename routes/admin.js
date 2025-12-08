@@ -32,24 +32,29 @@ router.post('/create', async (req, res) => {
 
         // Validate inputs
         if (!username || !password || !role) {
+            console.log(`[ADMIN] CREATE FAIL - Missing required fields`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing required fields.'));
         }
 
         if (!isValidUsername(username)) {
+            console.log(`[ADMIN] CREATE FAIL - Username: ${username}, Reason: Invalid username format`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Invalid username format.'));
         }
 
         if (!isValidPassword(password)) {
+            console.log(`[ADMIN] CREATE FAIL - Username: ${username}, Reason: Invalid password format`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Password must be 8-128 characters with no invalid characters.'));
         }
 
         if (!['manager', 'admin'].includes(role)) {
+            console.log(`[ADMIN] CREATE FAIL - Username: ${username}, Reason: Invalid role: ${role}`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Invalid role. Must be manager or admin.'));
         }
 
         // Check if username already exists
         const existing = await Profile.findOne({ name: username.trim() });
         if (existing) {
+            console.log(`[ADMIN] CREATE FAIL - Username: ${username}, Reason: Username already exists`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Username already exists.'));
         }
 
@@ -62,10 +67,10 @@ router.post('/create', async (req, res) => {
         });
         await newUser.save();
 
-        console.log(`Admin ${req.user.name} created new ${role} account: ${username}`);
+        console.log(`[ADMIN] CREATE SUCCESS - Admin: ${req.user.name}, Created: ${role} account for ${username}`);
         return res.redirect(`/profile/id/${req.user.name}?success=User created successfully`);
     } catch (err) {
-        console.error('Admin create error:', err);
+        console.error(`[ADMIN] CREATE ERROR - ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to create user.'));
     }
 });
@@ -76,16 +81,19 @@ router.post('/assign-role', async (req, res) => {
         const { username, role } = req.body;
 
         if (!username || !role) {
+            console.log(`[ADMIN] ASSIGN-ROLE FAIL - Missing required fields`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing username or role.'));
         }
 
         if (!['reviewer', 'manager', 'admin'].includes(role)) {
+            console.log(`[ADMIN] ASSIGN-ROLE FAIL - Username: ${username}, Reason: Invalid role: ${role}`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Invalid role.'));
         }
 
         // Find user
         const user = await Profile.findOne({ name: username });
         if (!user) {
+            console.log(`[ADMIN] ASSIGN-ROLE FAIL - Username: ${username}, Reason: User not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('User not found.'));
         }
 
@@ -93,18 +101,20 @@ router.post('/assign-role', async (req, res) => {
         if (user.role === 'admin' && role !== 'admin') {
             const adminCount = await Profile.countDocuments({ role: 'admin' });
             if (adminCount <= 1) {
+                console.log(`[ADMIN] ASSIGN-ROLE FAIL - Username: ${username}, Reason: Cannot change role of last admin`);
                 return res.redirect('/error?errorMsg=' + encodeURIComponent('Cannot change role of last admin.'));
             }
         }
 
         // Update role (password remains unchanged)
+        const oldRole = user.role;
         user.role = role;
         await user.save();
 
-        console.log(`Admin ${req.user.name} changed ${username} role to ${role}`);
+        console.log(`[ADMIN] ASSIGN-ROLE SUCCESS - Admin: ${req.user.name}, Changed ${username} role from ${oldRole} to ${role}`);
         return res.redirect(`/profile/id/${req.user.name}?success=Role updated successfully`);
     } catch (err) {
-        console.error('Admin assign-role error:', err);
+        console.error(`[ADMIN] ASSIGN-ROLE ERROR - ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to assign role.'));
     }
 });
@@ -115,12 +125,14 @@ router.post('/delete', async (req, res) => {
         const { username } = req.body;
 
         if (!username) {
+            console.log(`[ADMIN] DELETE FAIL - Missing username`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing username.'));
         }
 
         // Find user
         const user = await Profile.findOne({ name: username });
         if (!user) {
+            console.log(`[ADMIN] DELETE FAIL - Username: ${username}, Reason: User not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('User not found.'));
         }
 
@@ -128,12 +140,14 @@ router.post('/delete', async (req, res) => {
         if (user.role === 'admin') {
             const adminCount = await Profile.countDocuments({ role: 'admin' });
             if (adminCount <= 1) {
+                console.log(`[ADMIN] DELETE FAIL - Username: ${username}, Reason: Cannot delete last admin`);
                 return res.redirect('/error?errorMsg=' + encodeURIComponent('Cannot delete the last admin account.'));
             }
         }
 
         // Prevent self-deletion
         if (user._id.equals(req.user._id)) {
+            console.log(`[ADMIN] DELETE FAIL - Username: ${username}, Reason: Cannot delete own account`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Cannot delete your own account.'));
         }
 
@@ -143,10 +157,10 @@ router.post('/delete', async (req, res) => {
         // Delete user
         await Profile.deleteOne({ _id: user._id });
 
-        console.log(`Admin ${req.user.name} deleted user ${username}`);
+        console.log(`[ADMIN] DELETE SUCCESS - Admin: ${req.user.name}, Deleted user: ${username} (${user.role})`);
         return res.redirect(`/profile/id/${req.user.name}?success=User deleted successfully`);
     } catch (err) {
-        console.error('Admin delete error:', err);
+        console.error(`[ADMIN] DELETE ERROR - ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to delete user.'));
     }
 });

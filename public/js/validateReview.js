@@ -3,9 +3,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const title = document.getElementById('cr-title')
     const body = document.getElementById('cr-content')
     const button = document.getElementById('cr-post')
+    const titleErr = document.getElementById('cr-title-err')
+    const bodyErr = document.getElementById('cr-body-err')
 
-    const TITLE_MAX = 100
-    const BODY_MAX = 300
+    const TITLE_MAX = 101
+    const BODY_MAX = 301
 
     const file = document.getElementById("cr-file")
     const label = document.getElementById("cr-upload-text")
@@ -85,44 +87,42 @@ document.addEventListener('DOMContentLoaded', function () {
     if (title) {
         title.addEventListener('input', () => {
             const raw = String(title.value || '')
+            if (raw.length == TITLE_MAX) {
+                title.classList.add('required-error')
+                if (titleErr) titleErr.textContent = `❌ Title must be ${TITLE_MAX-1} characters or less.`
+                if (button) button.disabled = true
+                return
+            }
             if (REVIEW_FORBIDDEN_RE.test(raw)) {
                 title.classList.add('required-error')
-                showReviewError('❌ Invalid characters detected in input field/s.')
+                if (titleErr) titleErr.textContent = '❌ Invalid characters detected.'
                 if (button) button.disabled = true
                 return
             }
-            if (raw.length > TITLE_MAX) {
-                title.classList.add('required-error')
-                showReviewError(`❌ Title exceeds ${TITLE_MAX} characters (${raw.length}/${TITLE_MAX}).`)
-                if (button) button.disabled = true
-                return
-            } else {
-                title.classList.remove('required-error')
-                clearReviewError()
-                if (button) button.disabled = false
-            }
+            title.classList.remove('required-error')
+            if (titleErr) titleErr.textContent = ''
+            if (button) button.disabled = false
         })
     }
 
     if (body) {
         body.addEventListener('input', () => {
             const raw = String(body.value || '')
+            if (raw.length == BODY_MAX) {
+                body.classList.add('required-error')
+                if (bodyErr) bodyErr.textContent = `❌ Content must be ${BODY_MAX-1} characters or less.`
+                if (button) button.disabled = true
+                return
+            }
             if (REVIEW_FORBIDDEN_RE.test(raw)) {
                 body.classList.add('required-error')
-                showReviewError('❌ Invalid characters detected in input field/s.')
+                if (bodyErr) bodyErr.textContent = '❌ Invalid characters detected.'
                 if (button) button.disabled = true
                 return
             }
-            if (raw.length > BODY_MAX) {
-                body.classList.add('required-error')
-                showReviewError(`❌ Content exceeds ${BODY_MAX} characters (${raw.length}/${BODY_MAX}).`)
-                if (button) button.disabled = true
-                return
-            } else {
-                body.classList.remove('required-error')
-                clearReviewError()
-                if (button) button.disabled = false
-            }
+            body.classList.remove('required-error')
+            if (bodyErr) bodyErr.textContent = ''
+            if (button) button.disabled = false
         })
     }
 
@@ -153,15 +153,15 @@ document.addEventListener('DOMContentLoaded', function () {
             return
         }
 
-        if ((title && title.value && title.value.length > TITLE_MAX) ||
-            (body && body.value && body.value.length > BODY_MAX)) {
+        if ((title && title.value && title.value.length == TITLE_MAX) ||
+            (body && body.value && body.value.length == BODY_MAX)) {
             e.preventDefault()
-            if (title && title.value.length > TITLE_MAX) {
+            if (title && title.value.length == TITLE_MAX) {
                 title.classList.add('required-error')
-                showReviewError(`❌ Title exceeds ${TITLE_MAX} characters (${title.value.length}/${TITLE_MAX}).`)
-            } else if (body && body.value.length > BODY_MAX) {
+                showReviewError(`❌ Title exceeds ${TITLE_MAX-1} characters (${title.value.length}/${TITLE_MAX-1}).`)
+            } else if (body && body.value.length == BODY_MAX) {
                 body.classList.add('required-error')
-                showReviewError(`❌ Content exceeds ${BODY_MAX} characters (${body.value.length}/${BODY_MAX}).`)
+                showReviewError(`❌ Content exceeds ${BODY_MAX-1} characters (${body.value.length}/${BODY_MAX-1}).`)
             }
             if (button) button.disabled = true
             return

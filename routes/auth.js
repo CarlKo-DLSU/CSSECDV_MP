@@ -509,22 +509,26 @@ router.post('/recovery_account/verify', async (req, res) => {
         const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
 
         if (!isValidUsername(username) || !isString(question) || !isValidAnswer(answer)) {
+            console.log(`[RECOVERY] FAIL - Invalid input fields`)``
             if (isAjax) return res.status(400).json({ error: '❌ Missing or invalid fields' })
             return res.redirect('/auth/recovery_account?error=invalid')
         }
 
         if (!allowedQuestions.includes(question)) {
+            console.log(`[RECOVERY] FAIL - User: ${username}, Reason: Invalid question selected`)
             if (isAjax) return res.status(400).json({ error: '❌ Invalid question selected' })
             return res.redirect('/auth/recovery_account?error=invalid_question')
         }
 
         const user = await query.getProfile({ name: username.trim() })
         if (!user) {
+            console.log(`[RECOVERY] FAIL - User: ${username}, Reason: User not found`)
             if (isAjax) return res.status(404).json({ error: '❌ User not found' })
             return res.redirect('/auth/recovery_account?error=notfound')
         }
 
         if (!user.recoveryQuestion || user.recoveryQuestion !== question) {
+            console.log(`[RECOVERY] FAIL - User: ${username}, Reason: Recovery question does not match`)
             if (isAjax) return res.status(400).json({ error: '❌ Recovery question does not match' })
             return res.redirect('/auth/recovery_account?error=question_mismatch')
         }
@@ -532,9 +536,12 @@ router.post('/recovery_account/verify', async (req, res) => {
         const normalized = answer.trim().toLowerCase()
         const match = await bcrypt.compare(normalized, user.recoveryAnswerHash || '')
         if (!match) {
+            console.log(`[RECOVERY] FAIL - User: ${username}, Question: ${question}, Reason: Incorrect answer`)
             if (isAjax) return res.status(401).json({ error: '❌ Incorrect answer' })
             return res.redirect('/auth/recovery_account?error=incorrect_answer')
         }
+
+        console.log(`[RECOVERY] SUCCESS - User: ${username}, Question: ${question}, Answer verified successfully`)
 
         // set short-lived session state for password reset (15 minutes)
         req.session.passwordReset = {

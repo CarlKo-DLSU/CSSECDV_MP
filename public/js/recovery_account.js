@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const USERNAME_MAX = 30
         const ANSWER_MAX = 50
         const PASSWORD_MIN = 8
-        const PASSWORD_MAX = 128
+        const PASSWORD_MAX = 30
         const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
         const VERIFY_TIMEOUT = 10000
         const RESET_TIMEOUT = 10000
