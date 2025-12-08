@@ -31,20 +31,24 @@ router.post('/create-reviewer', async (req, res) => {
 
         // Validate inputs
         if (!username || !password) {
+            console.log(`[MANAGER] CREATE-REVIEWER FAIL - Manager: ${req.user.name}, Reason: Missing required fields`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing required fields.'));
         }
 
         if (!isValidUsername(username)) {
+            console.log(`[MANAGER] CREATE-REVIEWER FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: Invalid username format`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Invalid username format.'));
         }
 
         if (!isValidPassword(password)) {
+            console.log(`[MANAGER] CREATE-REVIEWER FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: Invalid password format`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Password must be 8-128 characters with no invalid characters.'));
         }
 
         // Check if username already exists
         const existing = await Profile.findOne({ name: username.trim() });
         if (existing) {
+            console.log(`[MANAGER] CREATE-REVIEWER FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: Username already exists`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Username already exists.'));
         }
 
@@ -57,10 +61,10 @@ router.post('/create-reviewer', async (req, res) => {
         });
         await newUser.save();
 
-        console.log(`${req.user.role} ${req.user.name} created new business owner account: ${username}`);
+        console.log(`[MANAGER] CREATE-REVIEWER SUCCESS - Manager: ${req.user.name}, Created business owner account for ${username}`);
         return res.redirect(`/profile/id/${req.user.name}?success=Business owner account created successfully`);
     } catch (err) {
-        console.error('Manager create-business-owner error:', err);
+        console.error(`[MANAGER] CREATE-REVIEWER ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to create business owner account.'));
     }
 });
@@ -71,17 +75,20 @@ router.post('/assign-reviewer-role', async (req, res) => {
         const { username, description } = req.body;
 
         if (!username) {
+            console.log(`[MANAGER] EDIT-USER FAIL - Manager: ${req.user.name}, Reason: Missing username`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing username.'));
         }
 
         // Find user
         const user = await Profile.findOne({ name: username });
         if (!user) {
+            console.log(`[MANAGER] EDIT-USER FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: User not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('User not found.'));
         }
 
         // Manager cannot edit managers or admins
         if (req.user.role === 'manager' && (user.role === 'manager' || user.role === 'admin')) {
+            console.log(`[MANAGER] EDIT-USER FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: Can only edit business owners`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('You can only manage regular user accounts.'));
         }
 
@@ -89,12 +96,12 @@ router.post('/assign-reviewer-role', async (req, res) => {
         if (description) {
             user.description = description.trim();
             await user.save();
-            console.log(`${req.user.role} ${req.user.name} edited description for ${username}`);
+            console.log(`[MANAGER] EDIT-USER SUCCESS - Manager: ${req.user.name}, Edited description for ${username}`);
         }
 
         return res.redirect(`/profile/id/${req.user.name}?success=User updated successfully`);
     } catch (err) {
-        console.error('Manager assign-reviewer-role error:', err);
+        console.error(`[MANAGER] EDIT-USER ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to update user.'));
     }
 });
@@ -105,22 +112,26 @@ router.post('/delete-reviewer', async (req, res) => {
         const { username } = req.body;
 
         if (!username) {
+            console.log(`[MANAGER] DELETE-USER FAIL - Manager: ${req.user.name}, Reason: Missing username`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing username.'));
         }
 
         // Find user
         const user = await Profile.findOne({ name: username });
         if (!user) {
+            console.log(`[MANAGER] DELETE-USER FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: User not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('User not found.'));
         }
 
         // Managers cannot delete managers or admins
         if (req.user.role === 'manager' && (user.role === 'manager' || user.role === 'admin')) {
+            console.log(`[MANAGER] DELETE-USER FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: Can only delete business owners`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('You can only delete business owner accounts.'));
         }
 
         // Prevent self-deletion
         if (user._id.equals(req.user._id)) {
+            console.log(`[MANAGER] DELETE-USER FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: Attempted self-deletion`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Cannot delete your own account.'));
         }
 
@@ -130,10 +141,10 @@ router.post('/delete-reviewer', async (req, res) => {
         // Delete business owner account
         await Profile.deleteOne({ _id: user._id });
 
-        console.log(`${req.user.role} ${req.user.name} deleted business owner ${username}`);
+        console.log(`[MANAGER] DELETE-USER SUCCESS - Manager: ${req.user.name}, Deleted business owner ${username}`);
         return res.redirect(`/profile/id/${req.user.name}?success=Business owner deleted successfully`);
     } catch (err) {
-        console.error('Manager delete-business-owner error:', err);
+        console.error(`[MANAGER] DELETE-USER ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to delete business owner.'));
     }
 });
@@ -155,17 +166,20 @@ router.post('/edit-user-description', async (req, res) => {
         const { username, description } = req.body;
 
         if (!username || description === undefined) {
+            console.log(`[MANAGER] EDIT-DESCRIPTION FAIL - Manager: ${req.user.name}, Reason: Missing username or description`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing username or description.'));
         }
 
         // Find user
         const user = await Profile.findOne({ name: username });
         if (!user) {
+            console.log(`[MANAGER] EDIT-DESCRIPTION FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: User not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('User not found.'));
         }
 
         // Managers cannot edit managers or admins
         if (req.user.role === 'manager' && (user.role === 'manager' || user.role === 'admin')) {
+            console.log(`[MANAGER] EDIT-DESCRIPTION FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: Can only edit business owner descriptions`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('You can only edit business owner descriptions.'));
         }
 
@@ -173,10 +187,10 @@ router.post('/edit-user-description', async (req, res) => {
         user.description = description.trim();
         await user.save();
 
-        console.log(`${req.user.role} ${req.user.name} edited description for ${username}`);
+        console.log(`[MANAGER] EDIT-DESCRIPTION SUCCESS - Manager: ${req.user.name}, Edited description for ${username}`);
         return res.redirect(`/profile/id/${req.user.name}?success=User description updated successfully`);
     } catch (err) {
-        console.error('Manager edit-user-description error:', err);
+        console.error(`[MANAGER] EDIT-DESCRIPTION ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to edit user description.'));
     }
 });
@@ -187,23 +201,27 @@ router.post('/assign-restaurant-owner', async (req, res) => {
         const { restaurantId, username } = req.body;
 
         if (!restaurantId || !username) {
+            console.log(`[MANAGER] ASSIGN-RESTAURANT FAIL - Manager: ${req.user.name}, Reason: Missing restaurant or owner`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing restaurant or owner.'));
         }
 
         // Find restaurant
         const resto = await Resto.findById(restaurantId);
         if (!resto) {
+            console.log(`[MANAGER] ASSIGN-RESTAURANT FAIL - Manager: ${req.user.name}, RestaurantId: ${restaurantId}, Reason: Restaurant not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Restaurant not found.'));
         }
 
         // Find user
         const user = await Profile.findOne({ name: username });
         if (!user) {
+            console.log(`[MANAGER] ASSIGN-RESTAURANT FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: User not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('User not found.'));
         }
 
         // Managers can only assign to business owners
         if (req.user.role === 'manager' && user.role !== 'reviewer') {
+            console.log(`[MANAGER] ASSIGN-RESTAURANT FAIL - Manager: ${req.user.name}, Username: ${username}, Reason: Can only assign to business owners`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Can only assign restaurants to business owners.'));
         }
 
@@ -211,10 +229,10 @@ router.post('/assign-restaurant-owner', async (req, res) => {
         resto.owner = user._id;
         await resto.save();
 
-        console.log(`${req.user.role} ${req.user.name} assigned restaurant ${resto.name} to ${username}`);
+        console.log(`[MANAGER] ASSIGN-RESTAURANT SUCCESS - Manager: ${req.user.name}, Assigned restaurant ${resto.name} to ${username}`);
         return res.redirect(`/profile/id/${req.user.name}?success=Restaurant owner assigned successfully`);
     } catch (err) {
-        console.error('Manager assign-restaurant-owner error:', err);
+        console.error(`[MANAGER] ASSIGN-RESTAURANT ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to assign restaurant owner.'));
     }
 });
@@ -225,22 +243,24 @@ router.post('/delete-review', async (req, res) => {
         const { reviewId } = req.body;
 
         if (!reviewId) {
+            console.log(`[MANAGER] DELETE-REVIEW FAIL - Manager: ${req.user.name}, Reason: Missing review ID`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing review ID.'));
         }
 
         // Find review
         const review = await Review.findById(reviewId);
         if (!review) {
+            console.log(`[MANAGER] DELETE-REVIEW FAIL - Manager: ${req.user.name}, ReviewId: ${reviewId}, Reason: Review not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Review not found.'));
         }
 
         // Delete review
         await Review.deleteOne({ _id: reviewId });
 
-        console.log(`${req.user.role} ${req.user.name} deleted review ${reviewId}`);
+        console.log(`[MANAGER] DELETE-REVIEW SUCCESS - Manager: ${req.user.name}, Deleted review ${reviewId}`);
         return res.redirect(`/profile/id/${req.user.name}?success=Review deleted successfully`);
     } catch (err) {
-        console.error('Manager delete-review error:', err);
+        console.error(`[MANAGER] DELETE-REVIEW ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to delete review.'));
     }
 });
@@ -251,12 +271,14 @@ router.post('/add-restaurant', async (req, res) => {
         const { name, description, owner } = req.body;
 
         if (!name || !owner) {
+            console.log(`[MANAGER] ADD-RESTAURANT FAIL - Manager: ${req.user.name}, Reason: Missing restaurant name or owner`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing restaurant name or owner.'));
         }
 
         // Find owner user
         const ownerUser = await Profile.findOne({ name: owner });
         if (!ownerUser) {
+            console.log(`[MANAGER] ADD-RESTAURANT FAIL - Manager: ${req.user.name}, RestaurantName: ${name}, Owner: ${owner}, Reason: Owner not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Owner not found.'));
         }
 
@@ -268,10 +290,10 @@ router.post('/add-restaurant', async (req, res) => {
         });
         await newResto.save();
 
-        console.log(`${req.user.role} ${req.user.name} added restaurant ${name}`);
+        console.log(`[MANAGER] ADD-RESTAURANT SUCCESS - Manager: ${req.user.name}, Added restaurant ${name} (Owner: ${owner})`);
         return res.redirect(`/profile/id/${req.user.name}?success=Restaurant added successfully`);
     } catch (err) {
-        console.error('Manager add-restaurant error:', err);
+        console.error(`[MANAGER] ADD-RESTAURANT ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to add restaurant.'));
     }
 });
@@ -282,12 +304,14 @@ router.post('/delete-restaurant', async (req, res) => {
         const { restaurantId } = req.body;
 
         if (!restaurantId) {
+            console.log(`[MANAGER] DELETE-RESTAURANT FAIL - Manager: ${req.user.name}, Reason: Missing restaurant ID`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing restaurant ID.'));
         }
 
         // Find restaurant
         const resto = await Resto.findById(restaurantId);
         if (!resto) {
+            console.log(`[MANAGER] DELETE-RESTAURANT FAIL - Manager: ${req.user.name}, RestaurantId: ${restaurantId}, Reason: Restaurant not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Restaurant not found.'));
         }
 
@@ -297,10 +321,10 @@ router.post('/delete-restaurant', async (req, res) => {
         // Delete restaurant
         await Resto.deleteOne({ _id: restaurantId });
 
-        console.log(`${req.user.role} ${req.user.name} deleted restaurant ${resto.name}`);
+        console.log(`[MANAGER] DELETE-RESTAURANT SUCCESS - Manager: ${req.user.name}, Deleted restaurant ${resto.name}`);
         return res.redirect(`/profile/id/${req.user.name}?success=Restaurant deleted successfully`);
     } catch (err) {
-        console.error('Manager delete-restaurant error:', err);
+        console.error(`[MANAGER] DELETE-RESTAURANT ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to delete restaurant.'));
     }
 });
@@ -311,18 +335,21 @@ router.post('/unassign-restaurant', async (req, res) => {
         const { restaurantId, newOwner } = req.body;
 
         if (!restaurantId || !newOwner) {
+            console.log(`[MANAGER] REASSIGN-RESTAURANT FAIL - Manager: ${req.user.name}, Reason: Missing restaurant or new owner`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Missing restaurant or new owner.'));
         }
 
         // Find restaurant
         const resto = await Resto.findById(restaurantId);
         if (!resto) {
+            console.log(`[MANAGER] REASSIGN-RESTAURANT FAIL - Manager: ${req.user.name}, RestaurantId: ${restaurantId}, Reason: Restaurant not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Restaurant not found.'));
         }
 
         // Find new owner user
         const newOwnerUser = await Profile.findOne({ name: newOwner });
         if (!newOwnerUser) {
+            console.log(`[MANAGER] REASSIGN-RESTAURANT FAIL - Manager: ${req.user.name}, NewOwner: ${newOwner}, Reason: New owner not found`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('New owner not found.'));
         }
 
@@ -333,10 +360,10 @@ router.post('/unassign-restaurant', async (req, res) => {
         resto.owner = newOwnerUser._id;
         await resto.save();
 
-        console.log(`${req.user.role} ${req.user.name} reassigned restaurant ${resto.name} from ${oldOwner?.name} to ${newOwner}`);
+        console.log(`[MANAGER] REASSIGN-RESTAURANT SUCCESS - Manager: ${req.user.name}, Reassigned restaurant ${resto.name} from ${oldOwner?.name} to ${newOwner}`);
         return res.redirect(`/profile/id/${req.user.name}?success=Restaurant owner reassigned successfully`);
     } catch (err) {
-        console.error('Manager unassign-restaurant error:', err);
+        console.error(`[MANAGER] REASSIGN-RESTAURANT ERROR - Manager: ${req.user.name}, Error: ${err.message}`);
         return res.redirect('/error?errorMsg=' + encodeURIComponent('Failed to reassign restaurant owner.'));
     }
 });

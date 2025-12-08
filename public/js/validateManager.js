@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Client-side validation for manager forms
-    const DESCRIPTION_MAX = 300
+    const DESCRIPTION_MAX = 301
     const FORBIDDEN_RE = /[\x00-\x1F\x7F\\\$\[\]]/
 
     // Get all manager forms
@@ -14,13 +14,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const descriptionErr = form.querySelector('.manager-description-err')
         const submitBtn = form.querySelector('button[type="submit"]')
 
+        // Set maxlength attribute on description inputs
+        descriptionInputs.forEach((descInput) => {
+            if (descInput) descInput.setAttribute('maxlength', DESCRIPTION_MAX)
+        })
+
         // Real-time description validation for each textarea
         descriptionInputs.forEach((descInput) => {
             if (descInput) {
                 descInput.addEventListener('input', () => {
                     const raw = String(descInput.value || '')
 
-                    if (raw.length > DESCRIPTION_MAX) {
+                    if (raw.length == DESCRIPTION_MAX) {
                         descInput.classList.add('required-error')
                         if (descriptionErr) descriptionErr.textContent = `❌ Description must be ${DESCRIPTION_MAX} characters or less.`
                         if (submitBtn) submitBtn.disabled = true
