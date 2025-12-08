@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault()
             title.classList.add("required-error")
             body.classList.add("required-error")
+            showReviewError('❌ Input field/s should not be empty')
         } else {
             // enable button
             title.classList.remove("required-error")
@@ -200,13 +201,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!orBody) return
 
-        if (orBody.value == ""){
-            // disable button
+        if (String(orBody.value || '').trim() === "") {
             e.preventDefault()
             orBody.classList.add("required-error")
+            showReviewError('❌ Input field/s should not be empty', orForm)
+            if (orButton) orButton.disabled = true
         } else {
-            // enable button
             orBody.classList.remove("required-error")
+            clearReviewError(orForm)
+            if (orButton) orButton.disabled = false
         }
     }
 

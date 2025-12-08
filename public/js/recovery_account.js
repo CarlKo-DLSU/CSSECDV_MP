@@ -42,6 +42,69 @@ document.addEventListener('DOMContentLoaded', function () {
             return (s || '').toString().trim()
         }
 
+        function validateVerifyInputs() {
+            if (!verifyForm) return true
+            const submitBtn = verifyForm.querySelector('button[type="submit"], input[type="submit"]')
+            const username = sanitizeTrim(raUsername && raUsername.value)
+            const question = String((raQuestion && raQuestion.value) || '')
+            const answer = sanitizeTrim(raAnswer && raAnswer.value)
+
+            if (raUsername) raUsername.classList.remove('required-error')
+            if (raQuestion) raQuestion.classList.remove('required-error')
+            if (raAnswer) raAnswer.classList.remove('required-error')
+
+            // empty username
+            if (!username) {
+                showVerifyMsg('❌ Username should not be empty')
+                if (raUsername) raUsername.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+            // invalid username
+            if (username.length > USERNAME_MAX || FORBIDDEN_RE.test(username)) {
+                showVerifyMsg('❌ Invalid username.')
+                if (raUsername) raUsername.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+            // question must be selected
+            if (!question) {
+                showVerifyMsg('❌ Please select a recovery question.')
+                if (raQuestion) raQuestion.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+            // empty answer
+            if (!answer) {
+                showVerifyMsg('❌ Please provide an answer.')
+                if (raAnswer) raAnswer.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+            // answer constraints
+            if (answer.length > ANSWER_MAX || FORBIDDEN_RE.test(answer)) {
+                showVerifyMsg('❌ Invalid answer.')
+                if (raAnswer) raAnswer.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+
+            // all good
+            showVerifyMsg('')
+            if (raUsername) raUsername.classList.remove('required-error')
+            if (raQuestion) raQuestion.classList.remove('required-error')
+            if (raAnswer) raAnswer.classList.remove('required-error')
+            if (submitBtn) submitBtn.disabled = false
+            return true
+        }
+
+        // attach dynamic validation listeners
+        if (raUsername) raUsername.addEventListener('input', validateVerifyInputs)
+        if (raQuestion) raQuestion.addEventListener('change', validateVerifyInputs)
+        if (raAnswer) raAnswer.addEventListener('input', validateVerifyInputs)
+        // ensure initial state
+        validateVerifyInputs()
+
         // If page was reached via non-AJAX redirect after successful verify,
         // the query string will contain verified=1 — show reset UI automatically.
         try {
@@ -58,6 +121,10 @@ document.addEventListener('DOMContentLoaded', function () {
         // VERIFY handler (AJAX)
         if (verifyForm) {
             verifyForm.addEventListener('submit', async (e) => {
+                if (!validateVerifyInputs()) {
+                    e.preventDefault()
+                    return
+                }
                 e.preventDefault()
                 showVerifyMsg('')
 
@@ -105,11 +172,67 @@ document.addEventListener('DOMContentLoaded', function () {
             })
         }
 
+        function validateResetInputs() {
+            if (!resetForm) return true
+            const submitBtn = resetForm.querySelector('button[type="submit"], input[type="submit"]')
+            const np = (newPwd && newPwd.value) || ''
+            const cp = (confPwd && confPwd.value) || ''
+
+            if (newPwd) newPwd.classList.remove('required-error')
+            if (confPwd) confPwd.classList.remove('required-error')
+
+            if (!np || !cp) {
+                showResetMsg('❌ Input field/s should not be empty')
+                if (!np && newPwd) newPwd.classList.add('required-error')
+                if (!cp && confPwd) confPwd.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+            if (np.length < PASSWORD_MIN || np.length > PASSWORD_MAX) {
+                showResetMsg(`❌ Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters.`)
+                if (newPwd) newPwd.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+            if (FORBIDDEN_RE.test(np) || FORBIDDEN_RE.test(cp)) {
+                showResetMsg('❌ Password contains invalid characters.')
+                if (FORBIDDEN_RE.test(np) && newPwd) newPwd.classList.add('required-error')
+                if (FORBIDDEN_RE.test(cp) && confPwd) confPwd.classList.add('required-error')
+               if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+            if (np !== cp) {
+                showResetMsg('❌ Passwords do not match.')
+                if (newPwd) newPwd.classList.add('required-error')
+                if (confPwd) confPwd.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+            if (!/[0-9]/.test(np) || !/[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(np)) {
+                showResetMsg('❌ Password must include a number and a special character.')
+                if (newPwd) newPwd.classList.add('required-error')
+                if (submitBtn) submitBtn.disabled = true
+                return false
+            }
+
+            // valid
+            showResetMsg('')
+            if (newPwd) newPwd.classList.remove('required-error')
+            if (confPwd) confPwd.classList.remove('required-error')
+            if (submitBtn) submitBtn.disabled = false
+            return true
+        }
+
+        if (newPwd) newPwd.addEventListener('input', validateResetInputs)
+        if (confPwd) confPwd.addEventListener('input', validateResetInputs)
+        validateResetInputs()
+
         // RESET handler (AJAX)
         if (resetForm) {
             resetForm.addEventListener('submit', async (e) => {
                 e.preventDefault()
                 showResetMsg('')
+                if (!validateResetInputs()) return
 
                 const np = (newPwd && newPwd.value) || ''
                 const cp = (confPwd && confPwd.value) || ''

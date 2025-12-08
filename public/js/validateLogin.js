@@ -161,6 +161,7 @@ function regValidateContent(e) {
     const pwdOk = validateRegPassword()
     const usernameRaw = regUsername ? String(regUsername.value || '') : ''
     const usernameVal = usernameRaw.trim()
+    const usernameEmpty = usernameVal.length === 0
     // validate against the raw value so control chars anywhere are detected
     const usernamesEmpty = !isValidUsernameClient(usernameRaw)
     const passwordsEmpty = !regPassword || regPassword.value.trim() == ""
@@ -174,6 +175,12 @@ function regValidateContent(e) {
         if (regUsername) regUsername.classList.add("required-error")
         if (regPassword) regPassword.classList.add("required-error")
         if (regConPassword) regConPassword.classList.add("required-error")
+
+        if (usernameEmpty && regAlr) {
+            regAlr.textContent = "❌ Username should not be empty"
+        } else if (regAlr && !nameTaken) {
+            regAlr.textContent = ""
+        }
 
         if (notMatch && regCon) {
             regCon.textContent = "❌ Passwords do not match."

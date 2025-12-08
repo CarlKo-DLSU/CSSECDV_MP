@@ -42,7 +42,7 @@ if (cpForm) {
         const cp = (confEl && confEl.value) || ''
 
         if (!current || !np || !cp) {
-            showMsg('Please fill all fields.')
+            showMsg('❌ Input field/s should not be empty')
             return
         }
         if (np.length < PASSWORD_MIN || np.length > PASSWORD_MAX) {

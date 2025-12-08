@@ -25,7 +25,58 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function sanitizeTrim(s) { return (s || '').toString().trim() }
 
+        function validateInputs() {
+            if (!submitBtn) return true
+            // clear previous field outlines
+            if (question) question.classList.remove('required-error')
+            if (answer) answer.classList.remove('required-error')
+
+            const qVal = String((question && question.value) || '')
+            const aRaw = (answer && answer.value) || ''
+            const aVal = sanitizeTrim(aRaw)
+
+            if (!qVal) {
+                showError('❌ Please select a recovery question.')
+                if (question) question.classList.add('required-error')
+                submitBtn.disabled = true
+                return false
+            }
+            if (!aVal) {
+                showError('❌ Please provide an answer.')
+                if (answer) answer.classList.add('required-error')
+                submitBtn.disabled = true
+                return false
+            }
+            if (aVal.length > ANSWER_MAX) {
+                showError('❌ Answer is too long.')
+                if (answer) answer.classList.add('required-error')
+                submitBtn.disabled = true
+                return false
+            }
+            if (FORBIDDEN_RE.test(aRaw)) {
+                showError('❌ Answer contains invalid characters.')
+                if (answer) answer.classList.add('required-error')
+                submitBtn.disabled = true
+                return false
+            }
+
+            // all good
+            showError('')
+            submitBtn.disabled = false
+            return true
+        }
+
+        // attach listeners for live validation
+        if (question) question.addEventListener('change', validateInputs)
+        if (answer) answer.addEventListener('input', validateInputs)
+        // initial validation state
+        validateInputs()
+
         form.addEventListener('submit', async (e) => {
+            if (!validateInputs()) {
+                e.preventDefault()
+                return
+            }
             e.preventDefault()
             showError('')
 
@@ -33,6 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const aRaw = (answer && answer.value) || ''
             const aVal = sanitizeTrim(aRaw)
 
+            // server-safety checks (duplicate of client checks)
             if (Array.isArray(aRaw) || typeof aRaw !== 'string') {
                 showError('Invalid answer.')
                 return

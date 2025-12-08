@@ -95,6 +95,23 @@ document.addEventListener('DOMContentLoaded', function () {
         if (icon) icon.style.backgroundPosition = normalIcon
     }
 
+    function validateNonEmpty() {
+        const titleEmpty = !title || String(title.value || '').trim() === ''
+        const contentEmpty = !content || String(content.value || '').trim() === ''
+        if (titleEmpty || contentEmpty) {
+            if (titleEmpty && title) title.classList.add('required-error')
+            if (contentEmpty && content) content.classList.add('required-error')
+            showEditError('❌ Input field/s should not be empty')
+            if (saveInput) saveInput.disabled = true
+            return false
+        }
+        if (title) title.classList.remove('required-error')
+        if (content) content.classList.remove('required-error')
+        clearEditError()
+        if (saveInput) saveInput.disabled = false
+        return true
+    }
+
     // proactive input validation for edit form
     if (title) {
         title.addEventListener('input', () => {
@@ -114,8 +131,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             title.classList.remove('required-error')
             clearEditError()
-            if (saveInput) saveInput.disabled = false
-        })
+            validateNonEmpty()
+       })
     }
 
     if (content) {
@@ -136,9 +153,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             content.classList.remove('required-error')
             clearEditError()
-            if (saveInput) saveInput.disabled = false
+            validateNonEmpty()
         })
     }
+
+    validateNonEmpty()
 
     function validateReviewContent(e) {
         e.preventDefault()
@@ -181,11 +200,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (!title) return
-        if (title.value == "") {
-            title.classList.add("required-error")
+        const titleEmpty = title.value == ""
+        const contentEmpty = content && content.value == ""
+        if (titleEmpty || contentEmpty) {
+            if (titleEmpty) title.classList.add("required-error")
+            if (contentEmpty && content) content.classList.add("required-error")
+            showEditError('❌ Input field/s should not be empty')
             return
         } else {
             title.classList.remove("required-error")
+            if (content) content.classList.remove("required-error")
             submitForm()
         }
     }

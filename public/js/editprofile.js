@@ -93,7 +93,7 @@ if (form) {
         // basic client-side empty-name guard
         if (name.value === "") {
             name.classList.add("required-error")
-            if (msg) msg.innerHTML = ""
+            if (msg) msg.innerHTML = "❌ Input field/s should not be empty"
             return
         } else {
             name.classList.remove("required-error")

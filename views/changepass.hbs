@@ -10,7 +10,7 @@
         <p class="success-msg">✅ {{ success }}</p>
         {{/if}}
 
-        <form id="changepass-form" method="POST" action="/changepass">
+        <form id="changepass-form" method="POST" action="/changepass" novalidate>
             <label>Current Password
                 <input type="password" name="current_password" placeholder="Current password" required>
             </label>

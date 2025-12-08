@@ -162,12 +162,13 @@ router.post('/review', (req, res, next) => {
 }, async (req, res) => {
     try {
         const user = req.user
-        const { title, content, stars, id, imagesChanged } = req.body
+        let { title, content, stars, id, imagesChanged } = req.body
         const images = req.files
 
-        if (!user || title === "") {
-            res.status(400).send("Bad Data.")
-            return
+        title = String(title || '').trim()
+        content = String(content || '').trim()
+        if (!user || title === "" || content === "") {
+            return res.status(400).send("❌ Input field/s should not be empty")
         }
 
         const review = await query.getReview({ _id: id })
