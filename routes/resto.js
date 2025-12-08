@@ -23,7 +23,9 @@ router.get('/id/:restoId', checkAuthenticate, async (req, res) => {
             error.throwRestoError()
         }
         
-        const isOwner = req.isAuthenticated() && req.user._id.equals(resto.owner) 
+        const isOwner = req.isAuthenticated() && req.user._id.equals(resto.owner)
+        const isManager = req.isAuthenticated() && req.user.role === 'manager'
+        const isAdmin = req.isAuthenticated() && req.user.role === 'admin'
 
         const reviews = await query.getReviews({ restoId: resto._id })
         const reviewCount = reviews.length
@@ -40,13 +42,15 @@ router.get('/id/:restoId', checkAuthenticate, async (req, res) => {
         const sfReviews = await sortFilterReviews(reviews, min, max, sort, order, page, or, filter, req.user)
 
         sfReviews.forEach(s => {
-           s.isOwner = isOwner  
+           s.isOwner = isOwner
+           s.isManager = isManager
+           s.isAdmin = isAdmin
         })
 
         const empty = sfReviews.length == 0
 
         console.log(`ROUTE -> resto: ${req.params.restoId}`)
-        res.render('resto', { sb: sb, reviews: sfReviews, empty: empty })
+        res.render('resto', { sb: sb, reviews: sfReviews, empty: empty, isManager: isManager, isAdmin: isAdmin, restoId: resto._id })
     } catch (err) {
         console.log(`ERROR! ${err.message}`)
 

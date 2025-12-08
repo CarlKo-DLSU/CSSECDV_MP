@@ -5,6 +5,7 @@ const { sortFilterReviews } = require("../utility/sfHelper")
 const error = require("../utility/error")
 const checkAuthenticate = require("../utility/checkauthenticate")
 const Profile = require("../database/models/Profile")
+const Resto = require("../database/models/Resto")
 
 router.get('/id/:profileId', checkAuthenticate, async (req, res) => {
     try {
@@ -37,17 +38,24 @@ router.get('/id/:profileId', checkAuthenticate, async (req, res) => {
             isCurrentUser = profile._id.equals(req.user._id) 
         }
 
-        // If current user is admin, fetch all usernames for dropdowns
+        // If current user is admin or manager, fetch all usernames and restaurants for dropdowns
         let allUsers = []
-        if (req.user && req.user.role === 'admin') {
+        let allRestos = []
+        if (req.user && (req.user.role === 'admin' || req.user.role === 'manager')) {
+            console.log(`[DEBUG] User ${req.user.name} (role: ${req.user.role}) - Fetching users and restaurants`)
             allUsers = await Profile.find({}, 'name role').lean()
+            // Fetch restaurants with owner details populated
+            allRestos = await Resto.find({}).populate('owner', 'name').lean()
+            console.log(`[DEBUG] Fetched ${allUsers.length} users and ${allRestos.length} restaurants`)
+        } else {
+            console.log(`[DEBUG] User not authenticated or not admin/manager. req.user: ${req.user ? req.user.name : 'null'}`)
         }
 
         const sfReviews = await sortFilterReviews(reviews, min, max, sort, order, page, or, filter, req.user)
         const empty = sfReviews.length == 0
 
         console.log(`ROUTE -> profile: ${req.params.profileId}`)
-        res.render('profile', { sb: sb, reviews: sfReviews, isCurrentUser: isCurrentUser, empty: empty, allUsers: allUsers })
+        res.render('profile', { sb: sb, reviews: sfReviews, isCurrentUser: isCurrentUser, empty: empty, allUsers: allUsers, allRestos: allRestos, currentUser: req.user })
     } catch (err) {
         console.log(`ERROR! ${err.message}`)
 
