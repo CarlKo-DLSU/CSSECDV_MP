@@ -7,6 +7,7 @@ const checkAuthenticate = require("../utility/checkauthenticate")
 const multer = require("multer")
 const path = require("path")
 const fs = require("fs")
+const crypto = require("crypto")
 const IP_LOG = console.info
 
 router.get('/id/:restoId', checkAuthenticate, async (req, res) => {
@@ -69,8 +70,9 @@ const posterStorage = multer.diskStorage({
         cb(null, './public/imgs/posters')
     },
     filename: function(req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        cb(null, uniqueSuffix + '-' + file.originalname)
+        const ext = path.extname(file.originalname || '').toLowerCase()
+        const name = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`
+        cb(null, name)
     }
 })
 

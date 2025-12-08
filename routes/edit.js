@@ -5,6 +5,7 @@ const error = require("../utility/error")
 const multer = require("multer")
 const path = require("path")
 const fs = require("fs")
+const crypto = require("crypto")
 const checkAuthenticate = require("../utility/checkauthenticate")
 const { updateOne } = require("../database/models/Profile")
 
@@ -13,8 +14,9 @@ const storage = multer.diskStorage({
         cb(null, './public/imgs/avatars')
     },
     filename: function(req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        cb(null, uniqueSuffix + '-' + file.originalname)
+        const ext = path.extname(file.originalname || '').toLowerCase()
+        const name = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`
+        cb(null, name)
     }
 })
 
@@ -23,8 +25,9 @@ const storage2 = multer.diskStorage({
         cb(null, './public/imgs/uploads')
     },
     filename: function(req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-        cb(null, uniqueSuffix + '-' + file.originalname)
+        const ext = path.extname(file.originalname || '').toLowerCase()
+        const name = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`
+        cb(null, name)
     }
 })
 
