@@ -42,14 +42,14 @@ router.get('/id/:profileId', checkAuthenticate, async (req, res) => {
         let allUsers = []
         let allRestos = []
         if (req.user && (req.user.role === 'admin' || req.user.role === 'manager')) {
-            console.log(`[DEBUG] User ${req.user.name} (role: ${req.user.role}) - Fetching users and restaurants`)
+            //console.log(`[DEBUG] User ${req.user.name} (role: ${req.user.role}) - Fetching users and restaurants`)
             allUsers = await Profile.find({}, 'name role').lean()
             // Fetch restaurants with owner details populated
             allRestos = await Resto.find({}).populate('owner', 'name').lean()
-            console.log(`[DEBUG] Fetched ${allUsers.length} users and ${allRestos.length} restaurants`)
-        } else {
-            console.log(`[DEBUG] User not authenticated or not admin/manager. req.user: ${req.user ? req.user.name : 'null'}`)
-        }
+            //console.log(`[DEBUG] Fetched ${allUsers.length} users and ${allRestos.length} restaurants`)
+        } //else {
+            //console.log(`[DEBUG] User not authenticated or not admin/manager. req.user: ${req.user ? req.user.name : 'null'}`)
+        //}
 
         const sfReviews = await sortFilterReviews(reviews, min, max, sort, order, page, or, filter, req.user)
         const empty = sfReviews.length == 0

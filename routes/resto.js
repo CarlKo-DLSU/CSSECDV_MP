@@ -100,6 +100,9 @@ router.post('/id/:restoId/poster', (req, res, next) => {
 }, async (req, res) => {
     try {
         if (!req.isAuthenticated()) {
+            const requestedPath = req.originalUrl || req.url;
+            const clientIp = req.ip || req.connection.remoteAddress;
+            console.log(`[ACCESS DENIED] Unauthenticated poster upload attempt - Path: POST ${requestedPath}, IP: ${clientIp}`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('User not logged in.'))
         }
 
@@ -108,6 +111,9 @@ router.post('/id/:restoId/poster', (req, res, next) => {
 
         // ownership check
         if (String(req.user._id) !== String(resto.owner)) {
+            const requestedPath = req.originalUrl || req.url;
+            const clientIp = req.ip || req.connection.remoteAddress;
+            console.log(`[ACCESS DENIED] Unauthorized poster upload attempt - User: ${req.user.name} (${req.user.role}), Restaurant: ${resto.name}, Owner: ${resto.owner}, Path: POST ${requestedPath}, IP: ${clientIp}`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('Unauthorized'))
         }
 
