@@ -204,7 +204,7 @@ router.get('/recovery_setup', (req, res) => {
     const pending = req.session.pendingRegistration
     if (!pending || !pending.expiresAt || pending.expiresAt < Date.now()) {
         req.session.pendingRegistration = null
-        return res.redirect('/?errorMsg=' + encodeURIComponent('No pending registration found or it expired. Please register again.'))
+        return res.redirect('/error?errorMsg=' + encodeURIComponent('No pending registration found or it expired. Please register again.'))
     }
     // pass username to the page so it can be displayed
     return res.render('recovery_setup', { username: pending.username })

@@ -20,7 +20,7 @@ function isAjax(req) {
 // show change password page
 router.get('/', checkAuthenticate, (req, res) => {
     if (!req.isAuthenticated()) {
-        return res.redirect('/error?errorMsg=Login details could not be found.')
+        return res.redirect('/error?errorMsg=You must be logged in to access this page.')
     }
     res.render('changepass', { currentUser: req.user, error: null, success: null })
 })

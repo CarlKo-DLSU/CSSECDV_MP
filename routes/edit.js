@@ -56,7 +56,7 @@ const up = multer({ storage: storage2, fileFilter: imageFileFilter, limits: { fi
 
 router.get('/user', checkAuthenticate, (req, res) => {
     if (!req.isAuthenticated()) {
-        res.redirect("/error?errorMsg=Login details could not be found.")
+        res.redirect("/error?errorMsg=You must be logged in to access this page.")
         return
     }
 

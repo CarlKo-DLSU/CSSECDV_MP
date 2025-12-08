@@ -38,7 +38,7 @@ router.get('/', checkAuthenticate, async (req, res) => {
 
 router.get("/error", (req, res) => {
     const err = req.query.errorMsg
-    res.render("error", { message: err || "Unknown error. Please retry!" })
+    res.render("error", { message: err || "You must be logged in to access this page." })
 })
 
 router.get("/about", (req, res) => {

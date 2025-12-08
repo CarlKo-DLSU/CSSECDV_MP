@@ -157,11 +157,17 @@ app.use("/changepass", changePassRouter)
 app.use("/admin", adminRouter)
 app.use("/manager", managerRouter)
 
+// 404 handler — must come after all routes
+app.use((req, res) => {
+    res.status(404).render('error', { message: '404 - Page not found' })
+})
+
 // basic error handler (keeps response minimal)
 app.use((err, req, res, next) => {
     console.error(err)
     if (res.headersSent) return next(err)
-    res.status(500).render('error', { errorMsg: 'Internal Server Error' })
+    // use the same `message` key expected by the error view
+    res.status(500).render('error', { message: 'Internal Server Error' })
 })
 
 // listen
