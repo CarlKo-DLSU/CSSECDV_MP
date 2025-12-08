@@ -21,7 +21,9 @@ async function sortFilterHome(restos, min, max, sort, order) {
         const reviews = await query.getReviews({ restoId: r._id });
         const reviewCount = reviews.length;
         r.reviewCount = reviewCount;
-        r.stars = reviewCount > 0 ? reviews.reduce((total, rev) => total + rev.stars, 0) / reviewCount : 0;
+        // compute numeric average and round to 2 decimals to ensure numeric sorting behaves correctly
+        const avg = reviewCount > 0 ? (reviews.reduce((total, rev) => total + rev.stars, 0) / reviewCount) : 0;
+        r.stars = Math.round(avg * 100) / 100;
 
         // first run
         if (minStars == null) {
@@ -40,13 +42,20 @@ async function sortFilterHome(restos, min, max, sort, order) {
     const relevance = new Relevance(minStars, maxStars, minRevs, maxRevs, 0.8, 0.2)
     let newRestos = restos.filter(r => r.stars >= min && r.stars <= max)
 
+    const dir = (order === "asc") ? -1 : 1
     newRestos.sort((a, b) => {
         if (sort === "relevance") {
-            return relevance.getRelevance(b.stars, b.reviewCount) - relevance.getRelevance(a.stars, a.reviewCount)
+            return dir * (relevance.getRelevance(b.stars, b.reviewCount) - relevance.getRelevance(a.stars, a.reviewCount))
         } else if (sort === "reviews") {
-            return b.reviewCount - a.reviewCount
+            return dir * (b.reviewCount - a.reviewCount)
+        } else if (sort === "stars") {
+            // pure average score comparison (ignores review count)
+            return dir * (b.stars - a.stars)
         }
+        return 0
     })
+
+    return newRestos
 
     if (order === "asc") {
         return newRestos.reverse()

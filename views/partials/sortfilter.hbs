@@ -10,6 +10,8 @@
     <label class="sf-label" id="sf-sort-list"> Sort:
         <select id="sf-sort" name="sort">
             {{#if home}}
+            <!-- new default average-score option -->
+            <option value="stars" selected>Average Stars</option>
             <option value="relevance">Relevance</option>
             <option value="reviews">Reviews</option>
             {{else}}

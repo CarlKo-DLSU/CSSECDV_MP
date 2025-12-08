@@ -9,7 +9,7 @@ router.get('/', checkAuthenticate, async (req, res) => {
     try {
         const q = req.query
 
-        const sort = q.sort || "relevance"
+        const sort = q.sort || "stars"
         const order = q.order || "desc"
         const min = Number(q.min) || 0
         const max = Number(q.max) || 5

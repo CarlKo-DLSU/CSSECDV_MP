@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (el) el.value = val
     }
 
+    if (!searchParams.has('sort') && sort) {
+        sort.value = 'stars'
+    }
+
     // live validation: show error when invalid, clear when valid
     filter && filter.addEventListener('input', () => {
         const val = filter.value || ''
