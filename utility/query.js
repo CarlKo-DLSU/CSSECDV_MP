@@ -127,6 +127,9 @@ const query = {
     updateProfile: (field, set) => {
         return Profile.updateOne(safeFilter(field), set)
     },
+    updateResto: (field, set) => {
+        return Resto.updateOne(safeFilter(field), set)
+    },
     updateReview: (field, set) => {
         return Review.updateOne(safeFilter(field), set)
     },

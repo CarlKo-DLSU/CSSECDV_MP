@@ -4,6 +4,10 @@ const query = require("../utility/query")
 const { sortFilterReviews } = require("../utility/sfHelper")
 const error = require("../utility/error")
 const checkAuthenticate = require("../utility/checkauthenticate")
+const multer = require("multer")
+const path = require("path")
+const fs = require("fs")
+const IP_LOG = console.info
 
 router.get('/id/:restoId', checkAuthenticate, async (req, res) => {
     try {
@@ -23,7 +27,7 @@ router.get('/id/:restoId', checkAuthenticate, async (req, res) => {
             error.throwRestoError()
         }
         
-        const isOwner = req.isAuthenticated() && req.user._id.equals(resto.owner)
+        const isOwner = req.isAuthenticated() && String(req.user._id) === String(resto.owner)
         const isManager = req.isAuthenticated() && req.user.role === 'manager'
         const isAdmin = req.isAuthenticated() && req.user.role === 'admin'
 
@@ -49,7 +53,7 @@ router.get('/id/:restoId', checkAuthenticate, async (req, res) => {
 
         const empty = sfReviews.length == 0
 
-        res.render('resto', { sb: sb, reviews: sfReviews, empty: empty, isManager: isManager, isAdmin: isAdmin, restoId: resto._id })
+        res.render('resto', { sb: sb, reviews: sfReviews, empty: empty, isManager: isManager, isAdmin: isAdmin, isOwner: isOwner, restoId: resto._id })
     } catch (err) {
 
         if (err.name !== "RestoError" && err.name != "ReviewFetchError") {
@@ -57,6 +61,77 @@ router.get('/id/:restoId', checkAuthenticate, async (req, res) => {
         } else {
             res.redirect(`/error?errorMsg=${err.message}`)
         }
+    }
+})
+
+const posterStorage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, './public/imgs/posters')
+    },
+    filename: function(req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, uniqueSuffix + '-' + file.originalname)
+    }
+})
+
+function posterFileFilter(req, file, cb) {
+    const ext = path.extname(file.originalname || '').toLowerCase()
+    const ALLOWED = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
+    if (ALLOWED.includes(ext)) cb(null, true)
+    else cb(new Error('Invalid file type'), false)
+}
+
+const FILE_MAX_BYTES = 10 * 1024 * 1024
+const uploadPoster = multer({ storage: posterStorage, fileFilter: posterFileFilter, limits: { fileSize: FILE_MAX_BYTES } })
+
+// owner-only poster update
+router.post('/id/:restoId/poster', (req, res, next) => {
+    uploadPoster.single('resto-poster')(req, res, (err) => {
+        if (err) {
+           if (err.code === 'LIMIT_FILE_SIZE') {
+                return res.redirect(`/error?errorMsg=${encodeURIComponent('Poster exceeds 10MB.')}`)
+            }
+            return res.redirect(`/error?errorMsg=${encodeURIComponent('Invalid poster upload.')}`)
+        }
+        next()
+    })
+}, async (req, res) => {
+    try {
+        if (!req.isAuthenticated()) {
+            return res.redirect('/error?errorMsg=' + encodeURIComponent('User not logged in.'))
+        }
+
+        const resto = await query.getResto({ name: req.params.restoId })
+        if (!resto) error.throwRestoError()
+
+        // ownership check
+        if (String(req.user._id) !== String(resto.owner)) {
+            return res.redirect('/error?errorMsg=' + encodeURIComponent('Unauthorized'))
+        }
+
+        // if no file (should not happen), redirect
+        if (!req.file) {
+            return res.redirect('/resto/id/' + resto.name)
+        }
+
+        const newPoster = req.file.filename
+        // update DB
+        await query.updateResto({ _id: resto._id }, { $set: { poster: newPoster } })
+
+        // remove old poster file if not default and exists
+        try {
+            if (resto.poster && resto.poster !== 'default_poster.png') {
+                const oldPath = path.join(__dirname, '..', 'public', 'imgs', 'posters', resto.poster)
+                fs.unlink(oldPath, (e) => { /* ignore unlink errors */ })
+            }
+        } catch (e) {}
+
+        try { console.info(`[resto] poster updated for resto="${resto.name}" by="${req.user.name || req.user._id}" ip=${req.ip}`) } catch (e) {}
+
+        return res.redirect('/resto/id/' + resto.name)
+    } catch (err) {
+        console.error(err)
+        return res.redirect('/error')
     }
 })
 

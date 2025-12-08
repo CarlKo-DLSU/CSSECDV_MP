@@ -50,7 +50,21 @@
             <ul class="cr-star-group" data-stars="{{ sb.stars }}">
             </ul>
             <div class="sb-pic sb-resto hov1">
-                <img src="/imgs/posters/{{ sb.poster }}" alt="">
+                {{#if isOwner}}
+                <form id="resto-poster-form" method="POST" enctype="multipart/form-data" action="/resto/id/{{ sb.name }}/poster">
+                    <label for="resto-poster-input" class="hov1" title="Click to change poster">
+                        <img id="resto-poster-img" src="/imgs/posters/{{ sb.poster }}" alt="">
+                    </label>
+                    <input id="resto-poster-input" name="resto-poster" class="input-hidden" type="file" accept="image/*">
+                    <div id="resto-poster-error" class="resto-poster-error" style="color:var(--col-error); margin-top:6px; display:none;"></div>
+                    <div id="resto-poster-actions" style="display:none; margin-top:8px;">
+                        <button id="resto-poster-confirm" type="submit" class="popup-button hov1">Confirm</button>
+                        <button id="resto-poster-cancel" type="button" class="popup-button hov1">Cancel</button>
+                    </div>
+                </form>
+                {{else}}
+                <img id="resto-poster-img" src="/imgs/posters/{{ sb.poster }}" alt="">
+                {{/if}}
             </div>
             <p class="sb-description">{{ sb.description }}</p>
             <div class="sb-stats">
@@ -80,3 +94,6 @@
 <script src="/js/validateReview.js"></script>
 <script src="/js/rating.js"></script>
 <script src="/js/sfReviews.js"></script>
+{{#if isOwner}}
+<script src="/js/restoPoster.js"></script>
+{{/if}}
