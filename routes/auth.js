@@ -523,13 +523,13 @@ router.post('/recovery_account/verify', async (req, res) => {
         const user = await query.getProfile({ name: username.trim() })
         if (!user) {
             console.log(`[RECOVERY] FAIL - User: ${username}, Reason: User not found`)
-            if (isAjax) return res.status(404).json({ error: '❌ User not found' })
+            if (isAjax) return res.status(404).json({ error: '❌ Incorrect detail/s' })
             return res.redirect('/auth/recovery_account?error=notfound')
         }
 
         if (!user.recoveryQuestion || user.recoveryQuestion !== question) {
             console.log(`[RECOVERY] FAIL - User: ${username}, Reason: Recovery question does not match`)
-            if (isAjax) return res.status(400).json({ error: '❌ Recovery question does not match' })
+            if (isAjax) return res.status(400).json({ error: '❌ Incorrect detail/s' })
             return res.redirect('/auth/recovery_account?error=question_mismatch')
         }
 
@@ -537,7 +537,7 @@ router.post('/recovery_account/verify', async (req, res) => {
         const match = await bcrypt.compare(normalized, user.recoveryAnswerHash || '')
         if (!match) {
             console.log(`[RECOVERY] FAIL - User: ${username}, Question: ${question}, Reason: Incorrect answer`)
-            if (isAjax) return res.status(401).json({ error: '❌ Incorrect answer' })
+            if (isAjax) return res.status(401).json({ error: '❌ Incorrect detail/s' })
             return res.redirect('/auth/recovery_account?error=incorrect_answer')
         }
 
@@ -556,7 +556,7 @@ router.post('/recovery_account/verify', async (req, res) => {
             })
         } catch (saveErr) {
             // fallback: return an error for AJAX or redirect with error for non-AJAX
-            if (isAjax) return res.status(500).json({ error: 'Failed to persist session' })
+            if (isAjax) return res.status(500).json({ error: '❌ Failed to persist session' })
             return res.redirect('/auth/recovery_account?error=session_save_failed')
         }
 
@@ -583,31 +583,31 @@ router.post('/recovery_account/reset', async (req, res) => {
         const sessionToken = req.session.passwordReset
         if (!sessionToken || !isString(sessionToken.username) || !sessionToken.expiresAt || sessionToken.expiresAt < Date.now()) {
             req.session.passwordReset = null
-            if (isAjax) return res.status(403).json({ error: 'Verification required or expired' })
+            if (isAjax) return res.status(403).json({ error: '❌ Verification required or expired' })
             return res.redirect('/auth/recovery_account?error=verification_required')
         }
 
         const { new_password, confirm_password } = req.body
         if (!isValidPassword(new_password) || !isValidPassword(confirm_password)) {
-            if (isAjax) return res.status(400).json({ error: 'Missing or invalid password fields' })
+            if (isAjax) return res.status(400).json({ error: '❌ Missing or invalid password fields' })
             return res.redirect('/auth/recovery_account?error=invalid_password')
         }
         if (new_password !== confirm_password) {
-            if (isAjax) return res.status(400).json({ error: 'Passwords do not match' })
+            if (isAjax) return res.status(400).json({ error: '❌ Passwords do not match' })
             return res.redirect('/auth/recovery_account?error=password_mismatch')
         }
 
         const numberOk = /[0-9]/.test(new_password)
         const specialOk = /[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(new_password)
         if (!numberOk || !specialOk) {
-            if (isAjax) return res.status(400).json({ error: 'Password must include a number and a special character.' })
+            if (isAjax) return res.status(400).json({ error: '❌ Password must include a number and a special character.' })
             return res.redirect('/auth/recovery_account?error=weak_password')
         }
 
         const user = await query.getProfile({ name: sessionToken.username })
         if (!user) {
             req.session.passwordReset = null
-            if (isAjax) return res.status(404).json({ error: 'User not found' })
+            if (isAjax) return res.status(404).json({ error: '❌ User not found' })
             return res.redirect('/auth/recovery_account?error=notfound')
         }
 
@@ -622,7 +622,11 @@ router.post('/recovery_account/reset', async (req, res) => {
             if (!oldHash) continue
             const same = await bcrypt.compare(new_password, oldHash)
             if (same) {
-                if (isAjax) return res.status(400).json({ error: 'New password must not match any current or previous passwords.' })
+                try {
+                    const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
+                    console.warn(`[recovery] attempted reuse of previous/current password for username="${who}" ip=${req.ip}`)
+                } catch (logErr) { /* ignore logging errors */ }
+                if (isAjax) return res.status(400).json({ error: '❌ New password must not match any current or previous passwords.' })
                 return res.redirect('/auth/recovery_account?error=password_reused')
             }
         }
@@ -657,6 +661,10 @@ router.post('/recovery_account/reset', async (req, res) => {
         const freshUser = await query.getProfile({ _id: user._id })
 
         // log the user in after password reset
+        try {
+            const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
+            console.info(`[recovery] password changed for username="${who}" ip=${req.ip}`)
+        } catch (logErr) { /* ignore logging errors */ }
         req.login(freshUser, (err) => {
             if (err) {
                 if (isAjax) {

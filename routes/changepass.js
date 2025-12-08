@@ -40,20 +40,20 @@ router.post('/', checkAuthenticate, async (req, res) => {
 
         // basic presence checks
         if (!current_password || !new_password || !confirm_password) {
-            const msg = 'Missing required fields.'
+            const msg = '❌ Missing required fields.'
             if (isAjax(req)) return res.status(400).json({ error: msg })
             return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
 
         // enforce length and character rules
         if (new_password.length < PASSWORD_MIN || new_password.length > PASSWORD_MAX || FORBIDDEN_RE.test(new_password) || FORBIDDEN_RE.test(current_password) || FORBIDDEN_RE.test(confirm_password)) {
-            const msg = `Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters and must not contain control characters or '$'.`
+            const msg = `❌ Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters and must not contain control characters or '$'.`
             if (isAjax(req)) return res.status(400).json({ error: msg })
             return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
 
         if (new_password !== confirm_password) {
-            const msg = 'New passwords do not match.'
+            const msg = '❌ New passwords do not match.'
             if (isAjax(req)) return res.status(400).json({ error: msg })
             return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
@@ -61,7 +61,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
         const numberOk = /[0-9]/.test(new_password)
         const specialOk = /[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(new_password)
         if (!numberOk || !specialOk) {
-            const msg = 'Password must be at least 8 characters and include a number and a special character.'
+            const msg = '❌ Password must be at least 8 characters and include a number and a special character.'
             if (isAjax(req)) return res.status(400).json({ error: msg })
             return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
@@ -69,7 +69,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
         // fetch fresh user record
         const user = await query.getProfile({ _id: String(req.user._id) })
         if (!user) {
-            const msg = 'User record not found.'
+            const msg = '❌ User record not found.'
             if (isAjax(req)) return res.status(500).json({ error: msg })
             return res.status(500).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
@@ -86,7 +86,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
                         const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
                         console.error(`[changepass] password change cooldown for username="${who}" remainingHours=${remainingHours} ip=${req.ip}`)
                     } catch (logErr) { /* ignore logging errors */ }
-                    const msg = `You must wait 24 hours before changing your password again. Try again in ~${remainingHours} hour(s).`
+                    const msg = `❌ You must wait 24 hours before changing your password again. Try again in ~${remainingHours} hour(s).`
                     if (isAjax(req)) return res.status(429).json({ error: msg })
                     return res.status(429).render('changepass', { currentUser: req.user, error: msg, success: null })
                 }
@@ -100,14 +100,19 @@ router.post('/', checkAuthenticate, async (req, res) => {
                 const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
                 console.error(`[changepass] incorrect current password attempt for username="${who}" ip=${req.ip}`)
             } catch (logErr) { /* ignore logging errors */ }
-            const msg = 'Current password is incorrect.'
+            const msg = '❌ Current password is incorrect.'
             if (isAjax(req)) return res.status(400).json({ error: msg })
             return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
 
         // disallow reuse of current or previous passwords
         if (await bcrypt.compare(new_password, user.password)) {
-            const msg = 'New password must not match your current password.'
+            // log attempted reuse of current password
+            try {
+                const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
+                console.warn(`[changepass] attempted reuse of current password for username="${who}" ip=${req.ip}`)
+            } catch (logErr) { /* ignore logging errors */ }
+            const msg = '❌ New password must not match your current password.'
             if (isAjax(req)) return res.status(400).json({ error: msg })
             return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
@@ -119,7 +124,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
                         const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
                         console.error(`[changepass] attempted reuse of previous password for username="${who}" ip=${req.ip}`)
                     } catch (logErr) { /* ignore logging errors */ }
-                    const msg = 'New password was used previously. Choose a different password.'
+                    const msg = '❌ New password was used previously. Choose a different password.'
                     if (isAjax(req)) return res.status(400).json({ error: msg })
                     return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
                 }
@@ -132,7 +137,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
         // atomic update: push current password into previousPasswords (limit to last 10) and set new password & timestamp
         const id = req.user && req.user._id ? String(req.user._id) : null
         if (!id) {
-            const msg = 'Invalid user id.'
+            const msg = '❌ Invalid user id.'
             if (isAjax(req)) return res.status(500).json({ error: msg })
             return res.status(500).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
@@ -167,7 +172,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
         }
 
         if (!updateResult) {
-            const msg = 'Failed to update password.'
+            const msg = '❌ Failed to update password.'
             if (isAjax(req)) return res.status(500).json({ error: msg })
             return res.status(500).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
