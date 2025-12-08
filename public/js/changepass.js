@@ -19,49 +19,87 @@ function showMsg(text, success = false) {
 
 // set maxlength attributes defensively if inputs exist
 if (cpForm) {
-    const cur = document.getElementById('current_password')
-    const np = document.getElementById('new_password')
-    const cp = document.getElementById('confirm_password')
-    if (cur) cur.setAttribute('maxlength', PASSWORD_MAX)
-    if (np) np.setAttribute('maxlength', PASSWORD_MAX)
-    if (cp) cp.setAttribute('maxlength', PASSWORD_MAX)
-}
+    const curEl = document.getElementById('current_password') || cpForm.querySelector('input[name="current_password"]')
+    const newEl = document.getElementById('new_password') || cpForm.querySelector('input[name="new_password"]')
+    const confEl = document.getElementById('confirm_password') || cpForm.querySelector('input[name="confirm_password"]')
+    const submitBtn = cpForm.querySelector('input[type="submit"], button[type="submit"]')
 
-if (cpForm) {
-    cpForm.addEventListener('submit', async (e) => {
-        e.preventDefault()
-        showMsg('')
-
-        // robustly find inputs by id or name (handles template id/name mismatches)
-        const curEl = document.getElementById('current_password') || cpForm.querySelector('input[name="current_password"]')
-        const newEl = document.getElementById('new_password') || cpForm.querySelector('input[name="new_password"]')
-        const confEl = document.getElementById('confirm_password') || cpForm.querySelector('input[name="confirm_password"]')
+    // live validation helper: outlines only offending fields, shows message, disables submit
+    function validateFields() {
+        // clear previous outlines
+        if (curEl) curEl.classList.remove('required-error')
+        if (newEl) newEl.classList.remove('required-error')
+        if (confEl) confEl.classList.remove('required-error')
+        if (!submitBtn) {}
 
         const current = (curEl && curEl.value) || ''
         const np = (newEl && newEl.value) || ''
         const cp = (confEl && confEl.value) || ''
 
+        // empty fields
         if (!current || !np || !cp) {
+            if (!current && curEl) curEl.classList.add('required-error')
+            if (!np && newEl) newEl.classList.add('required-error')
+            if (!cp && confEl) confEl.classList.add('required-error')
             showMsg('❌ Input field/s should not be empty')
-            return
+            if (submitBtn) submitBtn.disabled = true
+            return false
         }
+        // length
         if (np.length < PASSWORD_MIN || np.length > PASSWORD_MAX) {
+            if (newEl) newEl.classList.add('required-error')
             showMsg(`❌ Password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters.`)
-            return
+            if (submitBtn) submitBtn.disabled = true
+            return false
         }
-        // block forbidden characters in passwords
+        // forbidden chars
         if (FORBIDDEN_RE.test(np) || FORBIDDEN_RE.test(current) || FORBIDDEN_RE.test(cp)) {
+            if (FORBIDDEN_RE.test(current) && curEl) curEl.classList.add('required-error')
+            if (FORBIDDEN_RE.test(np) && newEl) newEl.classList.add('required-error')
+            if (FORBIDDEN_RE.test(cp) && confEl) confEl.classList.add('required-error')
             showMsg('❌ Password contains invalid characters.')
-            return
+            if (submitBtn) submitBtn.disabled = true
+            return false
         }
+        // mismatch
         if (np !== cp) {
+            if (newEl) newEl.classList.add('required-error')
+            if (confEl) confEl.classList.add('required-error')
             showMsg('❌ New passwords do not match.')
-            return
+            if (submitBtn) submitBtn.disabled = true
+            return false
         }
+        // complexity
         if (!/[0-9]/.test(np) || !/[!@#%^&*(),.?":{}|<>_\-;'`~+=\/;]/.test(np)) {
+            if (newEl) newEl.classList.add('required-error')
             showMsg('❌ Password must include a number and a special character.')
+            if (submitBtn) submitBtn.disabled = true
+            return false
+        }
+        // all good
+        showMsg('')
+        if (submitBtn) submitBtn.disabled = false
+        return true
+    }
+
+    // attach live listeners to inputs
+    if (curEl) curEl.addEventListener('input', validateFields)
+    if (newEl) newEl.addEventListener('input', validateFields)
+    if (confEl) confEl.addEventListener('input', validateFields)
+    // initial validation state
+    validateFields()
+
+    cpForm.addEventListener('submit', async (e) => {
+        if (!validateFields()) {
+            e.preventDefault()
             return
         }
+        e.preventDefault()
+        showMsg('')
+
+        const current = (curEl && curEl.value) || ''
+        const np = (newEl && newEl.value) || ''
+        const cp = (confEl && confEl.value) || ''
 
         const payload = { current_password: current, new_password: np, confirm_password: cp }
 

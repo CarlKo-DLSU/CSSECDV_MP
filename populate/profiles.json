@@ -5,7 +5,9 @@
         "avatar": "default_avatar.png",
         "description": "An anonymous user..",
         "erms": 0,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "5fc36b4ee1f20c5d8fdeab79",
@@ -13,7 +15,9 @@
         "avatar": "bob123.jpg",
         "description": "Hello! My name is Bob123, I'm an aspiring chef, food aficionado, and love trying out different restaurants until the incident.",
         "erms": 4,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "5fc36b4ee1f20c5d8fdeab7a",
@@ -21,7 +25,9 @@
         "avatar": "sarah.jpg",
         "description": "very exhausted with all of this and hungry for some good food.",
         "erms": 65,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "5fc36b4ee1f20c5d8fdeab7b",
@@ -29,7 +35,9 @@
         "avatar": "bean.jpg",
         "description": "biggest foodie in edgeville! havent been here in years!!",
         "erms": 11,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "5fc36b4ee1f20c5d8fdeab86",
@@ -37,7 +45,9 @@
         "avatar": "raiden.jpg",
         "description": "It's time for Jack...TO LET HER RIP (food apart)",
         "erms": 42,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "5fc36b4ee1f20c5d8fdeab87",
@@ -45,7 +55,9 @@
         "avatar": "wilson.jpg",
         "description": "In search of a new scientific breakthrough for comestibles!",
         "erms": 58,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "5fc36b4ee1f20c5d8fdeab88",
@@ -53,7 +65,9 @@
         "avatar": "amogus.png",
         "description": "What's so funny...about SUSSUS AMOGUS?",
         "erms": 101,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "5fc36b4ee1f20c5d8fdeab89",
@@ -61,7 +75,9 @@
         "avatar": "medic.png",
         "description": "Eating's just as rewarding as ze hurting.",
         "erms": 30,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "5fc36b4ee1f20c5d8fdeab8a",
@@ -69,7 +85,9 @@
         "avatar": "octane.jpg",
         "description": "RUN FAST, WIN FAST, EAT FAST",
         "erms": 71,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     },
     {
         "_id": "660e6a7fa01523ec4280333a",
@@ -77,6 +95,8 @@
         "avatar": "jamesruiz.jpg",
         "description": "Alan Turing yaoi enjoyer",
         "erms": 42,
-        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK"
+        "password": "$2b$10$cglrcl1NfrULMuwArGMvY.A4W6RrEH0jQ4CrJqSJOpWXYHbmLG8iK",
+        "recoveryQuestion": "What is the name of a childhood friend that no one else would know?",
+        "recoveryAnswerHash": "$2b$10$pNyge6WuFjmU.t7KyZfSOu5i1vDGyd63iyH29FmNZTKlmnY/kDVyG"
     }
 ]

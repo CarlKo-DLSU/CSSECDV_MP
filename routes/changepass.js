@@ -82,6 +82,10 @@ router.post('/', checkAuthenticate, async (req, res) => {
                 if (elapsed < DAY_MS) {
                     const remainingMs = DAY_MS - elapsed
                     const remainingHours = Math.ceil(remainingMs / (60 * 60 * 1000))
+                    try {
+                        const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
+                        console.error(`[changepass] password change cooldown for username="${who}" remainingHours=${remainingHours} ip=${req.ip}`)
+                    } catch (logErr) { /* ignore logging errors */ }
                     const msg = `You must wait 24 hours before changing your password again. Try again in ~${remainingHours} hour(s).`
                     if (isAjax(req)) return res.status(429).json({ error: msg })
                     return res.status(429).render('changepass', { currentUser: req.user, error: msg, success: null })
@@ -92,6 +96,10 @@ router.post('/', checkAuthenticate, async (req, res) => {
         // verify current password
         const match = await bcrypt.compare(current_password, user.password)
         if (!match) {
+            try {
+                const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
+                console.error(`[changepass] incorrect current password attempt for username="${who}" ip=${req.ip}`)
+            } catch (logErr) { /* ignore logging errors */ }
             const msg = 'Current password is incorrect.'
             if (isAjax(req)) return res.status(400).json({ error: msg })
             return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
@@ -103,9 +111,14 @@ router.post('/', checkAuthenticate, async (req, res) => {
             if (isAjax(req)) return res.status(400).json({ error: msg })
             return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
         }
+
         if (Array.isArray(user.previousPasswords) && user.previousPasswords.length > 0) {
             for (const oldHash of user.previousPasswords) {
                 if (oldHash && await bcrypt.compare(new_password, oldHash)) {
+                    try {
+                        const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
+                        console.error(`[changepass] attempted reuse of previous password for username="${who}" ip=${req.ip}`)
+                    } catch (logErr) { /* ignore logging errors */ }
                     const msg = 'New password was used previously. Choose a different password.'
                     if (isAjax(req)) return res.status(400).json({ error: msg })
                     return res.status(400).render('changepass', { currentUser: req.user, error: msg, success: null })
@@ -160,6 +173,11 @@ router.post('/', checkAuthenticate, async (req, res) => {
         }
 
         // success
+        try {
+            const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
+            console.info(`[changepass] password changed for username="${who}" ip=${req.ip}`)
+        } catch (logErr) { /* ignore logging errors */ }
+
         if (isAjax(req)) return res.status(200).json({ success: true, message: 'Password changed successfully.' })
         return res.render('changepass', { currentUser: req.user, error: null, success: 'Password changed successfully.' })
     } catch (err) {
