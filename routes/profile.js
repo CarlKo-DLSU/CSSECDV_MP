@@ -54,10 +54,8 @@ router.get('/id/:profileId', checkAuthenticate, async (req, res) => {
         const sfReviews = await sortFilterReviews(reviews, min, max, sort, order, page, or, filter, req.user)
         const empty = sfReviews.length == 0
 
-        console.log(`ROUTE -> profile: ${req.params.profileId}`)
         res.render('profile', { sb: sb, reviews: sfReviews, isCurrentUser: isCurrentUser, empty: empty, allUsers: allUsers, allRestos: allRestos, currentUser: req.user })
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
 
         if (err.name !== "ProfileError" && err.name !== "ReviewFetchError") {
             res.redirect(`/error`)

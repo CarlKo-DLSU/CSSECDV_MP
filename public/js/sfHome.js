@@ -71,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return
         }
         showError('')
-        console.log("sfHome -> submit event, filter.value:", filter ? filter.value : '')
         somethingChanged()
     })
 
@@ -90,7 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
             max: encodeURIComponent(max ? max.value : ""),
             filter: encodeURIComponent((filter && filter.value) ? filter.value : "")
         }
-        console.log("sfHome -> navigating with:", vals)
         window.location.href = `${path}?sort=${vals.sort}&order=${vals.order}&min=${vals.min}&max=${vals.max}&filter=${vals.filter}`
     }
 })

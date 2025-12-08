@@ -16,8 +16,6 @@ const storage = multer.diskStorage({
     }
 })
 
-const maxuploads = 4
-
 // only allow these extensions
 const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
 
@@ -35,9 +33,8 @@ const upload = multer({ storage: storage, fileFilter: imageFileFilter, limits: {
 
 // wrap multer so we can return 400 on invalid files / too large
 router.post("/new/:restoId", (req, res, next) => {
-    upload.array("rv-images", maxuploads)(req, res, (err) => {
+    upload.array("rv-images")(req, res, (err) => {
         if (err) {
-            console.log(`Review image upload error: ${err && err.code ? err.code : err.message}`)
             if (err.code === 'LIMIT_FILE_SIZE') {
                 return res.status(400).send("One or more images exceed the 10MB limit.")
             }
@@ -65,9 +62,7 @@ router.post("/new/:restoId", (req, res, next) => {
             profileId: profile._id,
             title: req.body["rv-title"],
             body: req.body["rv-body"],
-            uploads: req.files.map((i) => {
-                return i.filename
-            }),
+            uploads: req.file ? [req.file.filename] : [],
             lastUpdated: new Date(),
             stars: req.body["rv-stars"],
         }
@@ -76,10 +71,7 @@ router.post("/new/:restoId", (req, res, next) => {
 
         res.redirect(`/resto/id/${restoId}`)
 
-        console.log(`POST -> ${resto.name} - ${req.body["rv-title"]}`)
-        console.log(`\n--- UPLOAD ---\n${newReview}\n--------------\n`)
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
 
         if (err.name !== "LoginError" && err.name !== "RestoError") {
             res.redirect(`/error`)
@@ -124,10 +116,7 @@ router.post("/reply", async (req, res) => {
 
         res.redirect(`/resto/id/${resto.name}`)
 
-        console.log(`REPLY-> ${reviewId}`)
-        console.log(`\n--- REPLY ---\n${data}\n--------------\n`)
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
 
         if (err.name !== "LoginError" && err.name !== "RestoError") {
             res.redirect(`/error`)
@@ -147,10 +136,8 @@ router.post("/vote", async (req, res) => {
         const { id, vote } = req.body
         const curLikes = await query.updateLikes(id, req.user._id, vote)
 
-        console.log(`REVIEW: ${id} gains a ${vote}.`)
         res.status(200).send(curLikes.toString())
     } catch (err) {
-        console.log(err)
         res.status(400).send("Bad Request.")
     }
 })

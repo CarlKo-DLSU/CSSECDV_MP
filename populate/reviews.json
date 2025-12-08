@@ -8,7 +8,7 @@
         "lastUpdated": "1991/1/11",
         "likes": [],
         "dislikes": ["9fc36b4ee1f20c5d8fdeac7f", "9fc36b4ee1f20c5d8fdeac7f", "9fc36b4ee1f20c5d8fdeac7f", "9fc36b4ee1f20c5d8fdeac7f"],
-        "uploads": [ "b0.jpg", "b1.jpg", "b2.jpg" ],
+        "uploads": [ "b2.jpg" ],
         "stars": 3.5,
         "ownersResponse": {
             "lastUpdated": "2009/1/13",
@@ -109,7 +109,7 @@
         "lastUpdated": "2005/11/4",
         "likes": ["9fc36b4ee1f20c5d8fdeac7f", "9fc36b4ee1f20c5d8fdeac7f", "9fc36b4ee1f20c5d8fdeac7f", "9fc36b4ee1f20c5d8fdeac7f", "9fc36b4ee1f20c5d8fdeac7f"],
         "dislikes": [],
-        "uploads": ["doktor.jpg", "raiden.jpg"],
+        "uploads": ["raiden.jpg"],
         "stars": 4.5,
         "ownersResponse": null,
         "hasOr": false

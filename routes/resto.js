@@ -49,10 +49,8 @@ router.get('/id/:restoId', checkAuthenticate, async (req, res) => {
 
         const empty = sfReviews.length == 0
 
-        console.log(`ROUTE -> resto: ${req.params.restoId}`)
         res.render('resto', { sb: sb, reviews: sfReviews, empty: empty, isManager: isManager, isAdmin: isAdmin, restoId: resto._id })
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
 
         if (err.name !== "RestoError" && err.name != "ReviewFetchError") {
             res.redirect(`/error`)

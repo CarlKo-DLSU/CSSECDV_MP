@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const file = document.getElementById("cr-file")
     const label = document.getElementById("cr-upload-text")
     const icon = document.getElementsByClassName("cr-img-i")[0]
-    const oldImages = label ? parseInt(label.getAttribute("data-oldImages") || "0", 10) : 0
+    const oldImages = label ? Math.min(1, parseInt(label.getAttribute("data-oldImages") || "0", 10)) : 0
 
     const ALLOWED_IMAGE_EXTS = ['.jpg', '.png', '.gif', '.jfif', '.webp', '.jpeg']
     const FILE_MAX_BYTES = 10 * 1024 * 1024
@@ -88,9 +88,10 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteForm.addEventListener("click", (e) => { e.preventDefault(); deleteForm.submit() })
     }
 
-    if (oldImages > 0 && label) {
-        label.style.color = "var(--col-prim)"
-        label.innerText = oldImages + " IMGS"
+    if (label) {
+        const displayCount = oldImages >= 1 ? 1 : 0
+        label.style.color = displayCount ? "var(--col-prim)" : "white"
+        label.innerText = displayCount ? "1 IMG" : "0 IMG"
         if (icon) icon.style.backgroundPosition = normalIcon
     }
 
@@ -141,13 +142,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function validateReviewContent(e) {
         e.preventDefault()
-        if (file && file.files && file.files.length > 0) {
-           for (let i = 0; i < file.files.length; i++) {
-                if (fileTooLarge(file.files[i])) {
-                    showEditError('❌ One or more images exceed 10MB. Remove them before saving.')
-                    if (saveInput) saveInput.disabled = true
-                    return
-                }
+        if (file && file.files && file.files.length > 1) {
+            showEditError('❌ Only 1 image may be attached.')
+            if (saveInput) saveInput.disabled = true
+            return
+        }
+        if (file && file.files && file.files.length === 1) {
+            if (fileTooLarge(file.files[0])) {
+                showEditError('❌ Image exceeds 10MB.')
+                if (saveInput) saveInput.disabled = true
+                return
             }
         }
         // block submission if invalid chars present
@@ -172,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return
         }
 
-        if (file && file.files && file.files.length > 4) {
+        if (file && file.files && file.files.length > 1) {
             return
         }
 
@@ -190,9 +194,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!file || !label || !icon) return
         const numImages = file.files.length
 
-        // check extensions
-        for (let i = 0; i < numImages; i++) {
-            const f = file.files[i]
+        // only one file allowed
+        if (numImages > 1) {
+            label.innerText = "ONLY 1 ALLOWED"
+            label.style.color = "var(--col-error)"
+            showEditError('❌ Only one image may be attached.')
+            if (saveInput) saveInput.disabled = true
+            return
+        }
+
+        // check single file (if present)
+        if (numImages === 1) {
+            const f = file.files[0]
             if (!fileHasAllowedExt(f)) {
                 label.innerText = "INVALID FILE"
                 label.style.color = "var(--col-error)"
@@ -203,28 +216,21 @@ document.addEventListener('DOMContentLoaded', function () {
             if (fileTooLarge(f)) {
                 label.innerText = "FILE TOO LARGE"
                 label.style.color = "var(--col-error)"
-                showEditError('❌ One or more images exceed 10MB. Remove them before saving.')
+                showEditError('❌ Image exceeds 10MB.')
                 if (saveInput) saveInput.disabled = true
                 return
             }
         }
+
         // clear previous errors
         clearEditError()
         if (saveInput) saveInput.disabled = false
-        
-        label.innerText = numImages + " IMGS"
 
-        if (numImages == 0) {
-            label.style.color = "white"
-            icon.style.backgroundPosition = normalIcon
-        } else if (numImages < 5) {
-            label.style.color = "var(--col-prim)"
-            icon.style.backgroundPosition = normalIcon
-        } else {
-            label.style.color = "var(--col-error)"
-            icon.style.backgroundPosition = errorIcon
-            label.innerText = "MAX 4 IMGS"
-        }
+        // show current image count (either new file or existing)
+        const currentCount = numImages === 1 ? 1 : oldImages
+        label.innerText = currentCount ? "1 IMG" : "0 IMG"
+        label.style.color = currentCount ? "var(--col-prim)" : "white"
+        icon.style.backgroundPosition = normalIcon
 
         file.setAttribute("data-changed", "true")
     }

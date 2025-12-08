@@ -59,14 +59,36 @@ function containsRawInvalidChars(raw) {
     if (raw !== raw.trim()) return true
     return false
 }
-async function recordFailedAttempt(username) {
+
+async function recordFailedAttempt(username, failureType = 'Invalid Credentials') {
+    const uname = String(username || '').trim()
+    if (uname.length === 0) return { locked: false, la: null }
+
+    const userExists = await Profile.exists({ name: uname })
+    if (!userExists) {
+        // don't create LoginAttempt or log for unknown usernames
+        return { locked: false, la: null }
+    }
+
+    const update = {
+        $inc: { attempts: 1 },
+        $set: { lastFailureType: failureType, lastFailureAt: new Date() }
+    }
+
     const la = await LoginAttempt.findOneAndUpdate(
-        { username },
-        { $inc: { attempts: 1 } },
+        { username: uname },
+        update,
         { upsert: true, new: true, setDefaultsOnInsert: true }
     )
+
+    try {
+        console.info(`[auth] failed login attempt for username="${uname}" type="${failureType}"`)
+    } catch (e) { /* ignore logging errors */ }
+
+    // if threshold reached and not currently locked, set lock and reset attempts
     if (la.attempts >= LOCK_THRESHOLD && (!la.lockUntil || la.lockUntil < Date.now())) {
         la.lockUntil = new Date(Date.now() + LOCK_MS)
+        la.attempts = 0
         await la.save()
         return { locked: true, la }
     }
@@ -74,7 +96,9 @@ async function recordFailedAttempt(username) {
 }
 
 async function clearAttempts(username) {
-    await LoginAttempt.deleteOne({ username })
+    const uname = String(username || '').trim()
+    if (!uname) return
+    await LoginAttempt.deleteOne({ username: uname })
 }
 
 // register route: validate -> store pending registration in session -> redirect to recovery setup
@@ -228,6 +252,7 @@ router.post('/recovery_setup', async (req, res) => {
                     recoveryAnswerHash: answerHash,
                     createdAt: new Date()
                 })
+                try { console.info(`[auth] account created username="${safeName}"`) } catch (e) {}
                 await profile.save()
             } catch (e) {
                 // handle duplicate-name race or validation error
@@ -262,7 +287,7 @@ router.post('/recovery_setup', async (req, res) => {
 
 // login route unchanged (keeps existing lock logic)
 router.post('/login', async (req, res, next) => {
-    const username = req.body.username
+    const username = String(req.body.username || '').trim()
     try {
         // If there is a username-level lock (from LoginAttempt), refuse early
         const la = await LoginAttempt.findOne({ username })
@@ -274,21 +299,35 @@ router.post('/login', async (req, res, next) => {
             if (err) return next(err);
 
             if (!user) {
-                // failed login attempt -> record at username-level
-                const { locked } = await recordFailedAttempt(username)
+                const { locked: laLocked, la } = await recordFailedAttempt(username, 'Wrong Password')
 
                 // if an actual Profile exists, also increment its counters for monitoring
                 const userRecord = await query.getProfile({ name: username })
+                let profileLocked = false
+                let updatedProfile = null
                 if (userRecord) {
                     const newAttempts = (userRecord.failedLoginAttempts || 0) + 1;
-                    const update = { failedLoginAttempts: newAttempts };
+                    const update = {};
                     if (newAttempts >= LOCK_THRESHOLD) {
+                        // apply profile-level lock and reset counter
+                        update.failedLoginAttempts = 0;
                         update.lockUntil = new Date(Date.now() + LOCK_MS);
+                        profileLocked = true
+                    } else {
+                        update.failedLoginAttempts = newAttempts;
                     }
-                    await Profile.findByIdAndUpdate(userRecord._id, update, { new: true });
+                    updatedProfile = await Profile.findByIdAndUpdate(userRecord._id, update, { new: true });
+                    // double-check that lock was applied (race-safe)
+                    if (updatedProfile && updatedProfile.lockUntil && updatedProfile.lockUntil > Date.now()) profileLocked = true
                 }
 
-                if (locked) {
+                // Log the lock event once, preferring the profile-level lock entry (mentions account name)
+                if (profileLocked && updatedProfile) {
+                    try { console.info(`[auth] account locked for username="${updatedProfile.name}" until=${updatedProfile.lockUntil.toISOString()}`) } catch (e) {}
+                    return res.redirect(`/error?errorMsg=${encodeURIComponent('Please try again in a few minutes.')}`);
+                }
+                if (laLocked && la) {
+                    try { console.info(`[auth] username-level lock applied for username="${la.username}" until=${la.lockUntil.toISOString()}`) } catch (e) {}
                     return res.redirect(`/error?errorMsg=${encodeURIComponent('Please try again in a few minutes.')}`);
                 }
 
@@ -296,11 +335,12 @@ router.post('/login', async (req, res, next) => {
             }
 
             // successful login: clear username-level attempts and reset Profile counters
-            await clearAttempts(req.body.username);
+            await clearAttempts(username);
             await Profile.findByIdAndUpdate(user._id, { failedLoginAttempts: 0, lockUntil: null });
 
             req.login(user, (loginErr) => {
                 if (loginErr) return next(loginErr);
+                try { console.info(`[auth] successful login for username="${username}"`) } catch (e) {}
                 if (req.body.rememberMe) {
                     req.session.cookie.maxAge = 1814400000;
                 }
@@ -315,7 +355,7 @@ router.post('/login', async (req, res, next) => {
 // validatecredentials, logout and recovery_account routes: apply strict checks where appropriate
 
 router.post('/validatecredentials', async (req, res) => {
-    const username = req.body.username
+    const username = String(req.body.username || '').trim()
     const password = req.body.password
 
     if (containsRawInvalidChars(username) || !isString(password)) {
@@ -337,7 +377,7 @@ router.post('/validatecredentials', async (req, res) => {
 
     if (!user) {
         // record failed attempt for unknown username
-        const { locked } = await recordFailedAttempt(username)
+        const { locked } = await recordFailedAttempt(username, 'Invalid Credentials')
         if (locked) {
             return res.status(423).send("Too many failed attempts. Account locked for 5 minutes.");
         }
@@ -362,20 +402,29 @@ router.post('/validatecredentials', async (req, res) => {
             });
             res.status(200).send("Success!");
         } else {
-            // increment failed both at username-level and profile-level
-            const { locked } = await recordFailedAttempt(username)
+            const { locked: laLocked, la } = await recordFailedAttempt(username, 'Wrong Password')
 
             const newAttempts = (user.failedLoginAttempts || 0) + 1;
-            const update = {
-                failedLoginAttempts: newAttempts,
-                lastLoginAttempt: new Date()
-            };
+            const update = { lastLoginAttempt: new Date() };
+            let profileLocked = false
             if (newAttempts >= LOCK_THRESHOLD) {
+                // apply lock and reset the profile counter
+                update.failedLoginAttempts = 0;
                 update.lockUntil = new Date(Date.now() + LOCK_MS);
+                profileLocked = true
+            } else {
+                update.failedLoginAttempts = newAttempts;
             }
-            await Profile.findByIdAndUpdate(user._id, update, { new: true });
+            const updatedProfile = await Profile.findByIdAndUpdate(user._id, update, { new: true });
+            if (updatedProfile && updatedProfile.lockUntil && updatedProfile.lockUntil > Date.now()) profileLocked = true
 
-            if (locked) {
+            // Log the lock event once, preferring profile-level entry
+            if (profileLocked && updatedProfile) {
+                try { console.info(`[auth] account locked for username="${updatedProfile.name}" until=${updatedProfile.lockUntil.toISOString()}`) } catch (e) {}
+                return res.status(423).send("Too many failed attempts. Account locked for 5 minutes.");
+            }
+            if (laLocked && la) {
+                try { console.info(`[auth] username-level lock applied for username="${la.username}" until=${la.lockUntil.toISOString()}`) } catch (e) {}
                 return res.status(423).send("Too many failed attempts. Account locked for 5 minutes.");
             }
 
@@ -387,12 +436,14 @@ router.post('/validatecredentials', async (req, res) => {
 })
 
 router.get('/logout', (req, res) => {
+    const username = req.user && (req.user.name || req.user.username) ? (req.user.name || req.user.username) : null
     req.logout((err) => {
         if (err) {
-            res.redirect('/error?errorMsg=Failed to logout.')
-        } else {
-            res.clearCookie("restaurantReviewsCookie").redirect('/')
+            try { console.error(`[auth] logout error for username="${username || 'unknown'}": ${err && err.message ? err.message : err}`) } catch (e) {}
+            return res.redirect('/error?errorMsg=Failed to logout.')
         }
+        try { console.info(`[auth] logout username="${username || 'unknown'}"`) } catch (e) {}
+        return res.clearCookie("restaurantReviewsCookie").redirect('/')
     })
 })
 

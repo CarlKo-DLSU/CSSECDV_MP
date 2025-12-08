@@ -60,7 +60,6 @@ router.get('/user', checkAuthenticate, (req, res) => {
         return
     }
 
-    console.log(`ROUTE -> EDIT PROFILE (${req.user.name})`)
     res.render("edit-profile", req.user)
 })
 
@@ -87,10 +86,8 @@ router.get("/review/:revId", checkAuthenticate, async (req, res) => {
 
         review.oldImages = review.uploads.length
 
-        console.log(`ROUTE -> EDIT REVIEW (${review.title})`)
         res.render("edit-review", review)
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
 
         if (err.name != "ReviewFetchError") {
             res.redirect(`/error`)
@@ -103,7 +100,6 @@ router.get("/review/:revId", checkAuthenticate, async (req, res) => {
 router.post('/profile', (req, res, next) => {
     av.single("avatar")(req, res, (err) => {
         if (err) {
-            console.log(`Avatar upload error: ${err && err.code ? err.code : err.message}`)
             if (err.code === 'LIMIT_FILE_SIZE') {
                 return res.status(400).send("Avatar exceeds the 10MB limit.")
             }
@@ -134,25 +130,18 @@ router.post('/profile', (req, res, next) => {
                     fs.unlink("./public/imgs/avatars/" + oldAvatar, (err) => {
                         if (err) {
                             console.log(err)
-                        } else {
-                            console.log("Deleted old avatar of " + user.name)
                         }
                     })
-                } else {
-                    console.log("Switched old avatar of " + user.name)
                 }
             }
 
             await query.updateProfile({ _id: user._id }, { $set: updateObj })
 
-            console.log(`ROUTE -> UPDATED PROFILE (${user.name})`)
             res.status(200).send("Success!")
         } else {
-            console.log(`ROUTE -> FAILED TO UPDATE PROFILE`)
             res.status(409).send("Bad Credentials.")
         }
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
         res.status(401).send("Failed to update.")
     }
 })
@@ -160,7 +149,6 @@ router.post('/profile', (req, res, next) => {
 router.post('/review', (req, res, next) => {
     up.array("images", 4)(req, res, (err) => {
         if (err) {
-           console.log(`Review image upload error: ${err && err.code ? err.code : err.message}`)
             if (err.code === 'LIMIT_FILE_SIZE') {
                 return res.status(400).send("One or more images exceed the 10MB limit.")
             }
@@ -205,8 +193,6 @@ router.post('/review', (req, res, next) => {
                     fs.unlink("./public/imgs/uploads/" + img, (err) => {
                         if (err) {
                             console.log(err)
-                        } else {
-                            console.log("Deleted old image of " + id)
                         }
                     })
                 })
@@ -216,19 +202,14 @@ router.post('/review', (req, res, next) => {
                 updateObj.edited = true
                 updateObj.lastUpdated = new Date()
 
-                console.log(`ROUTE -> UPDATED REVIEW (${id}) by ${user.role} ${user.name}`)
                 await query.updateReview({ _id: id }, { $set: updateObj })
-            } else {
-                console.log(`ROUTE -> NO CHANGES TO REVIEW (${id})`)
             }
 
             res.status(200).send("Success!")
         } else {
-            console.log(`ROUTE -> FAILED TO UPDATE REVIEW`)
             res.status(409).send("Bad Credentials.")
         }
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
         res.status(401).send("Failed to update.")
     }
 })
@@ -259,16 +240,12 @@ router.post("/delete", async (req, res) => {
             fs.unlink("./public/imgs/uploads/" + img, (err) => {
                 if (err) {
                     console.log(err)
-                } else {
-                    console.log("Deleted old image of " + id)
                 }
             })
         })
 
-        console.log(`DELETED: ${review.title} by ${req.user.role} ${req.user.name}`)
         res.redirect(`/resto/id/${review.restoId.name}`)
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
 
         if (err.name != "ReviewFetchError" && err.name != "LoginFailError") {
             res.redirect(`/error`)
@@ -293,10 +270,8 @@ router.post("/delete/or", async (req, res) => {
 
         await query.updateReview({ _id: id }, { $set: { ownersResponse: null, hasOr: false } })
 
-        console.log("DELETED OR: " + review.title)
         res.redirect(`/resto/id/${review.restoId.name}`)
     } catch (err) {
-        console.log(`ERROR! ${err.message}`)
 
         if (err.name != "ReviewFetchError" && err.name != "LoginFailError") {
             res.redirect(`/error`)
