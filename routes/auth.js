@@ -204,6 +204,7 @@ router.get('/recovery_setup', (req, res) => {
     const pending = req.session.pendingRegistration
     if (!pending || !pending.expiresAt || pending.expiresAt < Date.now()) {
         req.session.pendingRegistration = null
+        console.error(`[auth] unauthenticated access to account recovery setup, ip=${req.ip}`)
         return res.redirect('/error?errorMsg=' + encodeURIComponent('No pending registration found or it expired. Please register again.'))
     }
     // pass username to the page so it can be displayed
@@ -281,7 +282,7 @@ router.post('/recovery_setup', async (req, res) => {
                 await profile.save()
             } catch (e) {
                 // handle duplicate-name race or validation error
-                console.error('recovery_setup create error:', e)
+                console.error('[auth] recovery_setup create error:', e)
                 if (isAjax) return res.status(500).json({ error: 'Failed to create account. Try again.' })
                 return res.redirect('/auth/recovery_setup?error=account_create_failed')
             }
@@ -290,13 +291,13 @@ router.post('/recovery_setup', async (req, res) => {
         // clear pending state and persist session
         req.session.pendingRegistration = null
         try { await new Promise((r, rej) => req.session.save(err => err ? rej(err) : r())) } catch (saveErr) {
-            console.error('recovery_setup session save error:', saveErr)
+            console.error('[auth] recovery_setup session save error:', saveErr)
         }
 
         // log the user in and respond
         req.login(profile, (loginErr) => {
             if (loginErr) {
-                console.error('recovery_setup login error:', loginErr)
+                console.error('[auth] recovery_setup login error:', loginErr)
                 if (isAjax) return res.status(200).json({ success: true, redirect: '/', login: false, message: 'Account created; please log in.' })
                 return res.redirect('/?msg=' + encodeURIComponent('Account created; please log in.'))
             }
@@ -304,7 +305,7 @@ router.post('/recovery_setup', async (req, res) => {
             return res.redirect('/')
         })
     } catch (err) {
-        console.error('recovery_setup error:', err)
+        console.error('[auth] recovery_setup error:', err)
         if (req.xhr) return res.status(500).json({ error: 'Server error.' })
         return res.redirect('/auth/recovery_setup?error=server')
     }
@@ -509,26 +510,26 @@ router.post('/recovery_account/verify', async (req, res) => {
         const isAjax = req.xhr || (req.get('Accept') && req.get('Accept').includes('application/json')) || req.get('X-Requested-With') === 'XMLHttpRequest'
 
         if (!isValidUsername(username) || !isString(question) || !isValidAnswer(answer)) {
-            console.log(`[RECOVERY] FAIL - Invalid input fields`)``
-            if (isAjax) return res.status(400).json({ error: '❌ Missing or invalid fields' })
+            console.log(`[auth] invalid input field/s in verifying recovery account`)
+            if (isAjax) return res.status(400).json({ error: '❌ Missing or invalid field/s' })
             return res.redirect('/auth/recovery_account?error=invalid')
         }
 
         if (!allowedQuestions.includes(question)) {
-            console.log(`[RECOVERY] FAIL - User: ${username}, Reason: Invalid question selected`)
+            console.log(`[auth] invalid question selected in verifying recovery account for user: ${username}`)
             if (isAjax) return res.status(400).json({ error: '❌ Invalid question selected' })
             return res.redirect('/auth/recovery_account?error=invalid_question')
         }
 
         const user = await query.getProfile({ name: username.trim() })
         if (!user) {
-            console.log(`[RECOVERY] FAIL - User: ${username}, Reason: User not found`)
+            console.log(`[auth] user: ${username} not found in account recovery`)
             if (isAjax) return res.status(404).json({ error: '❌ Incorrect detail/s' })
             return res.redirect('/auth/recovery_account?error=notfound')
         }
 
         if (!user.recoveryQuestion || user.recoveryQuestion !== question) {
-            console.log(`[RECOVERY] FAIL - User: ${username}, Reason: Recovery question does not match`)
+            console.log(`[auth] account recovery question does not match for user: ${username}`)
             if (isAjax) return res.status(400).json({ error: '❌ Incorrect detail/s' })
             return res.redirect('/auth/recovery_account?error=question_mismatch')
         }
@@ -536,12 +537,12 @@ router.post('/recovery_account/verify', async (req, res) => {
         const normalized = answer.trim().toLowerCase()
         const match = await bcrypt.compare(normalized, user.recoveryAnswerHash || '')
         if (!match) {
-            console.log(`[RECOVERY] FAIL - User: ${username}, Question: ${question}, Reason: Incorrect answer`)
+            console.log(`[auth] incorrect recovery question answer for user: ${username}`)
             if (isAjax) return res.status(401).json({ error: '❌ Incorrect detail/s' })
             return res.redirect('/auth/recovery_account?error=incorrect_answer')
         }
 
-        console.log(`[RECOVERY] SUCCESS - User: ${username}, Question: ${question}, Answer verified successfully`)
+        console.log(`[auth] account recovery details verified for user: ${username}`)
 
         // set short-lived session state for password reset (15 minutes)
         req.session.passwordReset = {
@@ -624,7 +625,7 @@ router.post('/recovery_account/reset', async (req, res) => {
             if (same) {
                 try {
                     const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
-                    console.warn(`[recovery] attempted reuse of previous/current password for username="${who}" ip=${req.ip}`)
+                    console.error(`[auth] attempted reuse of previous/current password for username="${who}" ip=${req.ip}`)
                 } catch (logErr) { /* ignore logging errors */ }
                 if (isAjax) return res.status(400).json({ error: '❌ New password must not match any current or previous passwords.' })
                 return res.redirect('/auth/recovery_account?error=password_reused')
@@ -663,7 +664,7 @@ router.post('/recovery_account/reset', async (req, res) => {
         // log the user in after password reset
         try {
             const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
-            console.info(`[recovery] password changed for username="${who}" ip=${req.ip}`)
+            console.info(`[auth] password changed for username="${who}" ip=${req.ip}`)
         } catch (logErr) { /* ignore logging errors */ }
         req.login(freshUser, (err) => {
             if (err) {

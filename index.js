@@ -41,7 +41,7 @@ app.use(compression())
 
 // require essential env vars early
 if (!process.env.SESSION_SECRET || !process.env.MONGO_URL || !process.env.PORT) {
-    console.error('Missing required env variables: SESSION_SECRET, MONGO_URL, or PORT')
+    console.error('[index] Missing required env variables: SESSION_SECRET, MONGO_URL, or PORT')
     process.exit(1)
 }
 
@@ -164,7 +164,7 @@ app.use((req, res) => {
 
 // basic error handler (keeps response minimal)
 app.use((err, req, res, next) => {
-    console.error(err)
+    console.error(`[index] ${err}`)
     if (res.headersSent) return next(err)
     // use the same `message` key expected by the error view
     res.status(500).render('error', { message: 'Internal Server Error' })
@@ -172,5 +172,5 @@ app.use((err, req, res, next) => {
 
 // listen
 const server = app.listen(process.env.PORT, function() {
-    console.log('SERVER IS UP!');
+    console.log('[index] SERVER IS UP!');
 })

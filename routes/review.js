@@ -49,7 +49,7 @@ router.post("/new/:restoId", (req, res, next) => {
         if (!req.isAuthenticated()) {
             const requestedPath = req.originalUrl || req.url;
             const clientIp = req.ip || req.connection.remoteAddress;
-            console.log(`[ACCESS DENIED] Unauthenticated review creation attempt - Path: POST ${requestedPath}, IP: ${clientIp}`);
+            console.log(`[review] unauthenticated review creation attempt at ip: ${clientIp}`);
             res.redirect("/error?errorMsg=User not logged in.")
             return
         }
@@ -91,7 +91,7 @@ router.post("/reply", async (req, res) => {
         if (!req.isAuthenticated()) {
             const requestedPath = req.originalUrl || req.url;
             const clientIp = req.ip || req.connection.remoteAddress;
-            console.log(`[ACCESS DENIED] Unauthenticated review reply attempt - Path: POST ${requestedPath}, IP: ${clientIp}`);
+            console.log(`[review] Unauthenticated review reply attempt at ip: ${clientIp}`);
             res.redirect("/error?errorMsg=User not logged in.")
             return
         }
@@ -139,7 +139,7 @@ router.post("/vote", async (req, res) => {
         if (!req.isAuthenticated()) {
             const requestedPath = req.originalUrl || req.url;
             const clientIp = req.ip || req.connection.remoteAddress;
-            console.log(`[ACCESS DENIED] Unauthenticated vote attempt - Path: POST ${requestedPath}, IP: ${clientIp}`);
+            console.log(`[review] unauthenticated vote attempt at ip: ${clientIp}`);
             res.status(403).send("User is not authenticated.")
             return
         }

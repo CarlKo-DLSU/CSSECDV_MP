@@ -69,10 +69,10 @@ async function insertData() {
 
 connectDB().then(() => {
     insertData().then(async () => {
-        console.log('Data inserted successfully.');
+        console.log('[run] Data inserted successfully.');
         await mongoose.connection.close();
     }).catch(async (err) => {
-        console.error('Error inserting data:', err);
+        console.error('[run] Error inserting data:', err);
         await mongoose.connection.close();
     })
 })

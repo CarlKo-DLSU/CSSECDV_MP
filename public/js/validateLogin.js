@@ -37,13 +37,13 @@ if (logPassword) logPassword.setAttribute('maxlength', PASSWORD_MAX)
 if (regForm) {
     regForm.addEventListener('submit', regValidateContent)
 } else {
-    console.warn('Register form (lor-register-form) not found - client validation may be bypassed')
+    console.error('[validateLogin] Register form (lor-register-form) not found - client validation may be bypassed')
 }
 
 if (logForm) {
     logForm.addEventListener('submit', logValidateContent)
 } else {
-    console.warn('Login form (lor-login-form) not found - client validation may be bypassed')
+    console.error('[validateLogin] Login form (lor-login-form) not found - client validation may be bypassed')
 }
 
 // debounce for username-availability checks
@@ -91,7 +91,7 @@ if (regUsername) {
                 }
             } catch (e) {
                 // network or timeout - don't block registration, show soft warning
-                console.warn('Name check failed', e)
+                console.error('[validateLogin] Name check failed', e)
             }
         }, 300)
     })

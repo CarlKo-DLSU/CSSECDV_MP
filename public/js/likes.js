@@ -37,7 +37,7 @@ function castVote(id, vote, el) {
                 el.innerText = xhttp.responseText
             }
         } else {
-            console.log("Server side error!", xhttp.status, xhttp.responseText)
+            console.log("[likes] Server side error!", xhttp.status, xhttp.responseText)
         }
     }
 

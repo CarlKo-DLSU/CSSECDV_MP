@@ -61,7 +61,7 @@ router.get('/user', checkAuthenticate, (req, res) => {
     if (!req.isAuthenticated()) {
         const requestedPath = req.originalUrl || req.url;
         const clientIp = req.ip || req.connection.remoteAddress;
-        console.log(`[ACCESS DENIED] Unauthenticated access attempt - Path: GET ${requestedPath}, IP: ${clientIp}`);
+        console.log(`[edit] unauthenticated edit profile attempt, ip:${clientIp}`);
         res.redirect("/error?errorMsg=You must be logged in to access this page.")
         return
     }
@@ -74,7 +74,7 @@ router.get("/review/:revId", checkAuthenticate, async (req, res) => {
         if (!req.isAuthenticated()) {
             const requestedPath = req.originalUrl || req.url;
             const clientIp = req.ip || req.connection.remoteAddress;
-            console.log(`[ACCESS DENIED] Unauthenticated access attempt - Path: GET ${requestedPath}, IP: ${clientIp}`);
+            console.log(`[edit] unauthenticated access attempt for review: ${requestedPath}, ip: ${clientIp}`);
             error.throwLoginError()
         }
 
@@ -92,7 +92,7 @@ router.get("/review/:revId", checkAuthenticate, async (req, res) => {
         if (!isReviewer && !isManager && !isAdmin) {
             const requestedPath = req.originalUrl || req.url;
             const clientIp = req.ip || req.connection.remoteAddress;
-            console.log(`[ACCESS DENIED] Unauthorized review edit attempt - User: ${req.user.name} (${req.user.role}), ReviewId: ${req.params.revId}, Path: GET ${requestedPath}, IP: ${clientIp}`);
+            console.log(`[edit] unauthorized review edit attempt at user: ${req.user.name}, ReviewId: ${req.params.revId}, IP: ${clientIp}`);
             return res.redirect('/error?errorMsg=' + encodeURIComponent('You do not have permission to edit this review.'));
         }
 
@@ -141,7 +141,7 @@ router.post('/profile', (req, res, next) => {
                 if (oldAvatar !== "default_avatar.png") {
                     fs.unlink("./public/imgs/avatars/" + oldAvatar, (err) => {
                         if (err) {
-                            console.log(err)
+                            console.log(`[edit] ${err}`)
                         }
                     })
                 }
@@ -205,7 +205,7 @@ router.post('/review', (req, res, next) => {
                 oldImages.forEach(img => {
                     fs.unlink("./public/imgs/uploads/" + img, (err) => {
                         if (err) {
-                            console.log(err)
+                            console.log(`[edit] ${err}`)
                         }
                     })
                 })
@@ -252,7 +252,7 @@ router.post("/delete", async (req, res) => {
         oldImages.forEach(img => {
             fs.unlink("./public/imgs/uploads/" + img, (err) => {
                 if (err) {
-                    console.log(err)
+                    console.log(`[edit] ${err}`)
                 }
             })
         })

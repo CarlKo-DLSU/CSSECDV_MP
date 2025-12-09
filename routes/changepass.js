@@ -20,6 +20,7 @@ function isAjax(req) {
 // show change password page
 router.get('/', checkAuthenticate, (req, res) => {
     if (!req.isAuthenticated()) {
+        console.error(`[changepass] unauthenticated password change attempt, ip:${req.ip}`)
         return res.redirect('/error?errorMsg=You must be logged in to access this page.')
     }
     res.render('changepass', { currentUser: req.user, error: null, success: null })
@@ -29,7 +30,10 @@ router.get('/', checkAuthenticate, (req, res) => {
 router.post('/', checkAuthenticate, async (req, res) => {
     try {
         if (!req.isAuthenticated()) {
-            if (isAjax(req)) return res.status(401).json({ error: 'Not authenticated.' })
+            if (isAjax(req)) {
+                console.error(`[changepass] attempted unauthenticated password change in ip=${req.ip}`)
+                return res.status(401).json({ error: 'Not authenticated.' })
+            }
             return res.status(401).render('changepass', { currentUser: null, error: 'Not authenticated.', success: null })
         }
 
@@ -110,7 +114,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
             // log attempted reuse of current password
             try {
                 const who = user && (user.name || user._id) ? (user.name || String(user._id)) : 'unknown'
-                console.warn(`[changepass] attempted reuse of current password for username="${who}" ip=${req.ip}`)
+                console.error(`[changepass] attempted reuse of current password for username="${who}" ip=${req.ip}`)
             } catch (logErr) { /* ignore logging errors */ }
             const msg = '❌ New password must not match your current password.'
             if (isAjax(req)) return res.status(400).json({ error: msg })
@@ -167,7 +171,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
                 await query.updateProfile({ _id: id }, { $set: { password: hashed, lastPasswordChange: new Date() } })
                 updateResult = true
             } catch (e2) {
-                console.error('changepass.update error:', e, e2)
+                console.error('[changepass] changepass.update error:', e, e2)
             }
         }
 
@@ -186,7 +190,7 @@ router.post('/', checkAuthenticate, async (req, res) => {
         if (isAjax(req)) return res.status(200).json({ success: true, message: 'Password changed successfully.' })
         return res.render('changepass', { currentUser: req.user, error: null, success: 'Password changed successfully.' })
     } catch (err) {
-        console.error('changepass.handler error:', err)
+        console.error('[changepass] changepass.handler error:', err)
         if (isAjax(req)) return res.status(500).json({ error: 'Internal server error.' })
         return res.status(500).render('changepass', { currentUser: req.user, error: 'Internal server error.', success: null })
     }
